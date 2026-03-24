@@ -626,9 +626,10 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
                 sel.removeAllRanges();
                 sel.addRange(range);
             }
-            // If pasted text contains reference patterns, force a DOM re-render
+            // If pasted text contains any references, force a DOM re-render
             // so the useEffect converts them into chips
-            if (/(@file:|@tab:|@workflow:|@dom:|"type"\s*:\s*"dom")/.test(text)) {
+            const { references } = parseReferences(text, { domElements: domElementsMap });
+            if (references.length > 0) {
                 forceRerenderRef.current = true;
             }
             handleInput();
