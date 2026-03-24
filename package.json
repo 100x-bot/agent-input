@@ -1,6 +1,6 @@
 {
   "name": "@100xbot/agent-input",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Reusable AI agent chat input bar with mentions, speech, file upload, and workflow review",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -21,7 +21,8 @@
       "types": "./dist/workflow.d.ts",
       "import": "./dist/workflow.mjs",
       "require": "./dist/workflow.cjs"
-    }
+    },
+    "./styles": "./src/tailwind.css"
   },
   "files": [
     "dist",
@@ -30,7 +31,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "demo:dev": "cd demo && npm run dev",
+    "demo:build": "cd demo && npm run build"
   },
   "peerDependencies": {
     "react": "^18 || ^19",
