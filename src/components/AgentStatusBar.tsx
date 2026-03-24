@@ -669,10 +669,9 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                             if (isWf) return 'ask for changes';
                                                             return placeholder || 'Type @ for adding tabs or workflows';
                                                         })()}
-                                                        placeholderClassName="text-[0.875rem] leading-[1.25rem] text-[#94a3b8]"
+                                                        placeholderClassName="text-[0.875rem] leading-[1.25rem]"
                                                         className="w-full bg-transparent border-0 focus:outline-none text-[0.875rem] overflow-y-auto theme-transition leading-[1.25rem] min-h-[1.5rem] max-h-[12rem]"
-                                                        style={{ color: 'var(--ai-text-primary)' } as React.CSSProperties}
-                                                        style={{ minHeight: "3rem", maxHeight: "12rem", fieldSizing: "content" }}
+                                                        style={{ color: 'var(--ai-text-primary)', minHeight: "3rem", maxHeight: "12rem", fieldSizing: "content" } as React.CSSProperties}
                                                         domElementsMap={domElementsRef.current}
                                                         onRemoveDOMElement={removeDOMElement}
                                                         onHistoryUp={handleHistoryUp}

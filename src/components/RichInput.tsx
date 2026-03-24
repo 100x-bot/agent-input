@@ -725,7 +725,8 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
         {/* Placeholder overlay */}
         {(!value || value === '\n') && placeholder && (
             <div
-                className={`absolute inset-0 pointer-events-none select-none p-[inherit] overflow-hidden text-[#929292] whitespace-pre-wrap break-words ${placeholderClassName}`}
+                className={`absolute inset-0 pointer-events-none select-none p-[inherit] overflow-hidden whitespace-pre-wrap break-words ${placeholderClassName}`}
+                style={{ color: 'var(--ai-text-placeholder)' }}
             >
                 {placeholder}
             </div>
