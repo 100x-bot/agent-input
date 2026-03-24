@@ -449,7 +449,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
             return;
         }
 
-        if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && showMentions) {
+        if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && showMentions && getMentionSuggestions().length > 0) {
             e.preventDefault();
             const mentions = getAllMentionItems();
             const direction = e.key === 'ArrowDown' ? 1 : -1;
