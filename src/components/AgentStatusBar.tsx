@@ -2,7 +2,7 @@
 import React, { forwardRef, KeyboardEvent, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ArrowDownToLine, X } from '../icons';
 import { useAgentInput } from '../context/AgentInputProvider';
-import type { AgentStatus, DOMElementData, Reference, WorkflowData } from '../types';
+import type { AgentStatus, DOMElementData, Reference, WorkflowData, MentionsDropdownRenderProps } from '../types';
 import RichInput, { RichInputRef } from './RichInput';
 import ListeningNotification from './ListeningNotification';
 import AgentHeader from './AgentHeader';
@@ -43,6 +43,8 @@ interface AgentStatusBarProps {
     onAutoScrollToggle?: (enabled: boolean) => void;
     /** If true, force the black workflow creation UI regardless of status text */
     activeWorkflowMode?: boolean;
+    /** Custom renderer for the mentions dropdown. When provided, replaces the default MentionsDropdown entirely. */
+    renderMentionsDropdown?: (props: MentionsDropdownRenderProps) => React.ReactNode;
 }
 
 export interface AgentStatusBarRef {
@@ -70,7 +72,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     initialValue,
     autoScrollEnabled = true,
     onAutoScrollToggle,
-    activeWorkflowMode
+    activeWorkflowMode,
+    renderMentionsDropdown
 }, ref) => {
     // Context from provider
     const ctx = useAgentInput();
@@ -681,12 +684,19 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
 
                                                     {/* Mentions Dropdown */}
                                                     {showMentions && mentionSections.length > 0 && (
-                                                        <MentionsDropdown
-                                                            ref={dropdownRef}
-                                                            sections={mentionSections}
-                                                            selectedIndex={selectedDropdownIndex}
-                                                            onSelect={selectMention}
-                                                        />
+                                                        renderMentionsDropdown
+                                                            ? renderMentionsDropdown({
+                                                                sections: mentionSections,
+                                                                selectedIndex: selectedDropdownIndex,
+                                                                onSelect: selectMention,
+                                                                flatItems: getAllMentionItems(),
+                                                            })
+                                                            : <MentionsDropdown
+                                                                ref={dropdownRef}
+                                                                sections={mentionSections}
+                                                                selectedIndex={selectedDropdownIndex}
+                                                                onSelect={selectMention}
+                                                            />
                                                     )}
                                                 </div>
 

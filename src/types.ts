@@ -154,6 +154,7 @@ export interface MentionItem {
   displayText: string;
   icon: string;
   favIconUrl?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface MentionSection {
@@ -164,6 +165,13 @@ export interface MentionSection {
 
 export interface FlatMentionItem extends MentionItem {
   sectionLabel: string;
+}
+
+export interface MentionsDropdownRenderProps {
+  sections: MentionSection[];
+  selectedIndex: number;
+  onSelect: (mention: string) => void;
+  flatItems: FlatMentionItem[];
 }
 
 // ─── Data Types ──────────────────────────────────────────────────────

@@ -44,6 +44,7 @@ export type {
   MentionItem,
   MentionSection,
   FlatMentionItem,
+  MentionsDropdownRenderProps,
   TabData,
   FileData,
   WorkflowData,
