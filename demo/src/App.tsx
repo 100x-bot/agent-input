@@ -156,7 +156,7 @@ export default function App() {
           <p className="text-sm mb-4" style={{ color: 'var(--ai-text-muted)' }}>
             Type in the input below. Use <code className="px-1 rounded text-xs" style={{ backgroundColor: 'var(--ai-surface-active)', color: 'var(--ai-text-primary)' }}>@</code> to trigger mention suggestions for tabs, files, and workflows.
           </p>
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--ai-surface-primary)', border: '1px solid var(--ai-border-subtle)', boxShadow: 'var(--ai-shadow-md)' }}>
+          <div className="rounded-xl" style={{ backgroundColor: 'var(--ai-surface-primary)', border: '1px solid var(--ai-border-subtle)', boxShadow: 'var(--ai-shadow-md)' }}>
             <AgentInputProvider config={mockConfig}>
               <AgentStatusBar
                 ref={statusBarRef}
