@@ -30,13 +30,25 @@ npm run build    # tsup → dist/ (ESM + CJS + DTS)
 npm run dev      # tsup --watch
 ```
 
-Build output: `dist/index.mjs`, `dist/index.cjs`, `dist/index.d.ts` (and recording/workflow variants).
+Build output: `dist/index.mjs`, `dist/index.cjs`, `dist/index.d.ts` (and recording/workflow variants), plus `dist/styles.css` (pre-compiled Tailwind + design tokens).
+
+## Styles
+
+The library ships a pre-compiled CSS bundle. Consumers just import it — **no Tailwind required**:
+
+```tsx
+import '@100xbot/agent-input/styles.css';
+```
+
+The CSS includes all utility classes used by components, design tokens (CSS custom properties `--ai-*`), and dark mode support (add `.dark` class to a parent element).
+
+Source styling uses Tailwind utility classes in `src/`, compiled at build time via `@tailwindcss/cli` into `dist/styles.css`. The build input is `src/styles.build.css`.
 
 ## Development Rules
 
 - Never run linting or type checking commands
 - This is a library — no application entry point, no dev server
-- All styling uses Tailwind CSS utility classes (consumers must include `dist/` in their Tailwind content config)
+- Source styling uses Tailwind CSS utility classes but consumers get pre-compiled CSS
 - Peer dependencies: `react`, `react-dom`, `lucide-react`, `framer-motion` — never bundle these
 - No runtime dependencies — everything comes through the context config
 - Keep `AgentInputConfig` as the single contract between library and host app

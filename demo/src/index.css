@@ -1,4 +1,5 @@
 @import "tailwindcss";
-@import "../../src/tailwind.css";
-@source "../../src/";
 @source "../src/";
+
+/* Import library's pre-compiled styles (Tailwind utilities + design tokens + dark mode) */
+@import "../../dist/styles.css";

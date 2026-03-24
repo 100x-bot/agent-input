@@ -22,36 +22,38 @@
       "import": "./dist/workflow.mjs",
       "require": "./dist/workflow.cjs"
     },
-    "./styles": "./src/tailwind.css"
+    "./styles.css": "./dist/styles.css",
+    "./styles": "./dist/styles.css"
   },
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && npx @tailwindcss/cli -i src/styles.build.css -o dist/styles.css --minify",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "demo:dev": "cd demo && npm run dev",
     "demo:build": "cd demo && npm run build"
   },
   "peerDependencies": {
-    "react": "^18 || ^19",
-    "react-dom": "^18 || ^19",
+    "framer-motion": ">=10",
     "lucide-react": ">=0.300",
-    "framer-motion": ">=10"
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "framer-motion": "^12.0.0",
+    "lucide-react": "^0.500.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lucide-react": "^0.500.0",
-    "framer-motion": "^12.0.0",
+    "tailwindcss": "^4.2.2",
     "tsup": "^8.0.0",
     "typescript": "^5.7.0"
   },
-  "dependencies": {},
   "publishConfig": {
     "access": "public"
   },
