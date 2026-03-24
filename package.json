@@ -1,6 +1,6 @@
 {
   "name": "@100xbot/agent-input",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reusable AI agent chat input bar with mentions, speech, file upload, and workflow review",
   "type": "module",
   "main": "./dist/index.cjs",

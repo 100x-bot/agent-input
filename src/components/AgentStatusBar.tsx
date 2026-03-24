@@ -224,6 +224,11 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
 
     const speechSynthesis = ctx.speech?.synthesis ?? { cancel: () => {} };
 
+    // Register auto-submit callback with speech recognition provider
+    useEffect(() => {
+        speechRecognition.setOnAutoSubmit?.(handleSpeechAutoSubmit);
+    }, [handleSpeechAutoSubmit, speechRecognition.setOnAutoSubmit]);
+
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
         focus: (cursorOffset?: number) => richInputRef.current?.focus(cursorOffset),

@@ -28,6 +28,7 @@ export interface AgentInputConfig {
       clearTranscript: () => void;
       cancelAutoSubmit: () => void;
       resetError: () => void;
+      setOnAutoSubmit?: (callback: () => void) => void;
     };
     synthesis: { cancel: () => void };
   };
@@ -96,7 +97,7 @@ export interface AgentInputConfig {
 
   // Conversation (optional)
   conversation?: {
-    addMessage: (role: string, content: string) => void;
+    addMessage: (message: any) => void;
   };
 
   // View mode (optional)
