@@ -186,13 +186,13 @@ export default function App() {
             <pre className="text-sm font-mono" style={{ color: 'var(--ai-status-ready)' }} aria-label="Installation commands">
 {`npm install @100xbot/agent-input
 
-# Peer dependencies
-npm install react react-dom lucide-react framer-motion`}
+# Only peer dependencies: react and react-dom`}
             </pre>
           </div>
           <div className="rounded-xl p-5 mt-3 overflow-x-auto" style={{ backgroundColor: 'var(--ai-surface-workflow-bar)' }}>
             <pre className="text-sm font-mono" style={{ color: 'var(--ai-text-placeholder)' }} aria-label="Usage example code">
-{`import { AgentInputProvider, AgentStatusBar } from '@100xbot/agent-input';
+{`import '@100xbot/agent-input/styles.css';
+import { AgentInputProvider, AgentStatusBar } from '@100xbot/agent-input';
 import type { AgentInputConfig, AgentStatus } from '@100xbot/agent-input';
 
 const config: AgentInputConfig = {

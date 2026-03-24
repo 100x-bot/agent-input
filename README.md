@@ -10,13 +10,7 @@ A reusable AI agent chat input bar for React applications. Features rich text in
 npm install @100xbot/agent-input
 ```
 
-**Peer dependencies:**
-
-```bash
-npm install react react-dom lucide-react framer-motion
-```
-
-**Import the styles** — no Tailwind CSS required in your project:
+**Import the styles** — no Tailwind CSS, no extra dependencies:
 
 ```tsx
 import '@100xbot/agent-input/styles.css';
