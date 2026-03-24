@@ -386,13 +386,13 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
         // Get current content to compare
         const currentContent = extractTextContent(contentEditableRef.current);
 
-        // Check if value contains references that aren't rendered as chips yet
+        // Parse segments and check if DOM chip count matches expected references
         const segments = parseContent(value);
-        const hasUnrenderedRefs = segments.some(s => s.type === 'reference') &&
-            !contentEditableRef.current.querySelector('[data-reference]');
+        const expectedRefCount = segments.filter(s => s.type === 'reference').length;
+        const actualRefCount = contentEditableRef.current.querySelectorAll('[data-reference]').length;
+        const refCountMismatch = expectedRefCount !== actualRefCount;
 
-        // Update if content changed, references need rendering, or forced
-        if (currentContent !== value || hasUnrenderedRefs || forceRerenderRef.current) {
+        if (currentContent !== value || refCountMismatch || forceRerenderRef.current) {
             forceRerenderRef.current = false;
             isUpdatingRef.current = true;
 
