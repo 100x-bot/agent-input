@@ -2,6 +2,8 @@
 
 A reusable AI agent chat input bar for React applications. Features rich text input with @mentions, speech recognition, file uploads, model selection, and workflow integration.
 
+**[Live Demo](https://100x-bot.github.io/agent-input/)**
+
 ## Installation
 
 ```bash
@@ -14,11 +16,20 @@ npm install @100xbot/agent-input
 npm install react react-dom lucide-react framer-motion
 ```
 
+**Import the styles** — no Tailwind CSS required in your project:
+
+```tsx
+import '@100xbot/agent-input/styles.css';
+```
+
+The library ships a pre-compiled CSS bundle (~8KB gzipped) that includes all needed styles, design tokens, and dark mode support.
+
 ## Quick Start
 
 Wrap your component tree with `AgentInputProvider` and pass a config object that bridges your app's data sources:
 
 ```tsx
+import '@100xbot/agent-input/styles.css';
 import { AgentInputProvider, AgentStatusBar } from '@100xbot/agent-input';
 import type { AgentInputConfig } from '@100xbot/agent-input';
 
@@ -48,6 +59,26 @@ function App() {
       />
     </AgentInputProvider>
   );
+}
+```
+
+## Theming
+
+The library uses CSS custom properties (`--ai-*`) for all colors, shadows, and borders. Dark mode activates when a parent element has the `dark` class:
+
+```html
+<html class="dark">
+  <!-- components automatically use dark theme -->
+</html>
+```
+
+To customize colors, override the CSS custom properties:
+
+```css
+:root {
+  --ai-status-working: #3870FF;
+  --ai-surface-primary: #ffffff;
+  /* see dist/styles.css for all available tokens */
 }
 ```
 
@@ -91,6 +122,10 @@ function App() {
 |--------|-------------|
 | `WorkflowReview` | Workflow review and approval component |
 
+### Styles (`@100xbot/agent-input/styles.css`)
+
+Pre-compiled CSS bundle containing all utility classes, design tokens, and dark mode support. Import once at app level.
+
 ## AgentInputConfig
 
 The provider config bridges your application's data layer with the component library:
@@ -126,27 +161,13 @@ interface AgentInputConfig {
 
 See `src/context/AgentInputProvider.tsx` for the full type definition.
 
-## Tailwind CSS
+## Accessibility
 
-This library uses Tailwind CSS utility classes. Add the package's source to your Tailwind content config:
-
-```js
-// tailwind.config.js
-module.exports = {
-  content: [
-    './src/**/*.{ts,tsx}',
-    './node_modules/@100xbot/agent-input/dist/**/*.{mjs,cjs}',
-  ],
-};
-```
-
-Or for Tailwind CSS v4 with `@tailwindcss/vite`:
-
-```css
-/* app.css */
-@import "tailwindcss";
-@source "../node_modules/@100xbot/agent-input/dist";
-```
+- WCAG AA compliant contrast ratios
+- Full keyboard navigation for all dropdowns and dialogs
+- ARIA roles, labels, and live regions
+- `prefers-reduced-motion` support — animations are disabled for users who prefer reduced motion
+- Semantic HTML with proper heading hierarchy
 
 ## Types
 

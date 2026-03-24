@@ -26,8 +26,7 @@
     "./styles": "./dist/styles.css"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "tsup && npx @tailwindcss/cli -i src/styles.build.css -o dist/styles.css --minify",
