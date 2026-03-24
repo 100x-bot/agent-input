@@ -49,6 +49,9 @@
     "typescript": "^5.7.0"
   },
   "dependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
