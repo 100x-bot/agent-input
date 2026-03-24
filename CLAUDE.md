@@ -1,0 +1,53 @@
+# CLAUDE.md
+
+## Project Overview
+
+`@100xbot/agent-input` is a standalone React component library that provides an AI agent chat input bar. It was extracted from the 100xbot browser extension to be reusable across different host applications.
+
+## Architecture
+
+The library uses a single React context (`AgentInputProvider`) for dependency injection. Host applications provide an `AgentInputConfig` object that bridges their data layer (messaging, files, tabs, workflows, speech, model selection, etc.) into the component tree.
+
+### Entry Points
+
+- `@100xbot/agent-input` — Main components, hooks, types
+- `@100xbot/agent-input/recording` — Recording dialog and animation components
+- `@100xbot/agent-input/workflow` — Workflow review component
+
+### Key Files
+
+- `src/context/AgentInputProvider.tsx` — Context provider and `AgentInputConfig` interface (single source of truth for the config shape)
+- `src/components/AgentStatusBar.tsx` — Main component (~740 lines, forwardRef)
+- `src/types.ts` — All shared types
+- `src/index.ts` — Main entry point exports
+- `src/recording.ts` — Recording entry point
+- `src/workflow.ts` — Workflow entry point
+
+## Build
+
+```bash
+npm run build    # tsup → dist/ (ESM + CJS + DTS)
+npm run dev      # tsup --watch
+```
+
+Build output: `dist/index.mjs`, `dist/index.cjs`, `dist/index.d.ts` (and recording/workflow variants).
+
+## Development Rules
+
+- Never run linting or type checking commands
+- This is a library — no application entry point, no dev server
+- All styling uses Tailwind CSS utility classes (consumers must include `dist/` in their Tailwind content config)
+- Peer dependencies: `react`, `react-dom`, `lucide-react`, `framer-motion` — never bundle these
+- No runtime dependencies — everything comes through the context config
+- Keep `AgentInputConfig` as the single contract between library and host app
+- Types in `src/types.ts` are the canonical type definitions — do not duplicate them
+
+## Publishing
+
+```bash
+npm version patch  # or minor/major
+npm run build
+npm publish
+```
+
+Package is `@100xbot/agent-input` on npm, public access.
