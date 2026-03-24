@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { AgentInputProvider, AgentStatusBar } from '@100xbot/agent-input';
 import type { AgentStatus, AgentStatusBarRef } from '@100xbot/agent-input';
 import { createMockConfig } from './mockConfig';
+import { useSpeechRecognition } from './useSpeechRecognition';
 import { Moon, Sun } from '../../src/icons';
 
-const mockConfig = createMockConfig();
+const baseMockConfig = createMockConfig();
 
 const presetStates: Record<string, AgentStatus> = {
   idle: {
@@ -69,8 +70,17 @@ export default function App() {
   const [activePreset, setActivePreset] = useState<PresetKey>('idle');
   const [dark, setDark] = useDarkMode();
   const statusBarRef = useRef<AgentStatusBarRef>(null);
+  const speechRecognition = useSpeechRecognition();
 
   const status = presetStates[activePreset];
+
+  const mockConfig = useMemo(() => ({
+    ...baseMockConfig,
+    speech: {
+      recognition: speechRecognition,
+      synthesis: { cancel: () => {} },
+    },
+  }), [speechRecognition]);
 
   return (
     <div className="min-h-screen transition-colors duration-200" style={{ backgroundColor: 'var(--ai-surface-tertiary)' }}>
