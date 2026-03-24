@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import type {
   MentionSection,
   FlatMentionItem,
@@ -9,6 +9,10 @@ import type {
   DOMElementData,
   LLMModel,
 } from '../types';
+import {
+  parseReferences as builtInParseReferences,
+  extractReferences as builtInExtractReferences,
+} from '../utils/referenceParser';
 
 export interface AgentInputConfig {
   // Messaging
@@ -116,11 +120,11 @@ export interface AgentInputConfig {
     currentTheme: { name: string; [key: string]: any };
   };
 
-  // Reference parsing
-  extractReferences: (text: string, metadata?: { domElements?: Map<string, DOMElementData | string>; availableWorkflows?: string[] }) => Reference[];
+  // Reference parsing (optional — built-in parser used when not provided)
+  extractReferences?: (text: string, metadata?: { domElements?: Map<string, DOMElementData | string>; availableWorkflows?: string[] }) => Reference[];
 
-  // Reference display parsing (for RichInput)
-  parseReferences: (text: string, metadata?: { domElements?: Map<string, any> }) => {
+  // Reference display parsing for RichInput (optional — built-in parser used when not provided)
+  parseReferences?: (text: string, metadata?: { domElements?: Map<string, any> }) => {
     references: Reference[];
     segments: Array<{ type: 'text' | 'reference'; content: string; reference?: Reference }>;
   };
@@ -134,7 +138,13 @@ export interface AgentInputConfig {
   };
 }
 
-const AgentInputContext = createContext<AgentInputConfig | null>(null);
+// Resolved config with non-optional parser fields (defaults applied)
+export type ResolvedAgentInputConfig = AgentInputConfig & {
+  extractReferences: NonNullable<AgentInputConfig['extractReferences']>;
+  parseReferences: NonNullable<AgentInputConfig['parseReferences']>;
+};
+
+const AgentInputContext = createContext<ResolvedAgentInputConfig | null>(null);
 
 export function AgentInputProvider({
   config,
@@ -143,14 +153,20 @@ export function AgentInputProvider({
   config: AgentInputConfig;
   children: React.ReactNode;
 }) {
+  const resolved = useMemo<ResolvedAgentInputConfig>(() => ({
+    ...config,
+    extractReferences: config.extractReferences ?? builtInExtractReferences,
+    parseReferences: config.parseReferences ?? builtInParseReferences,
+  }), [config]);
+
   return (
-    <AgentInputContext.Provider value={config}>
+    <AgentInputContext.Provider value={resolved}>
       {children}
     </AgentInputContext.Provider>
   );
 }
 
-export function useAgentInput(): AgentInputConfig {
+export function useAgentInput(): ResolvedAgentInputConfig {
   const ctx = useContext(AgentInputContext);
   if (!ctx) {
     throw new Error('useAgentInput must be used within an AgentInputProvider');

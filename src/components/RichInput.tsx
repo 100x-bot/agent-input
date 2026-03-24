@@ -386,8 +386,13 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
         // Get current content to compare
         const currentContent = extractTextContent(contentEditableRef.current);
 
-        // Only update if content is different from the value, or if a paste introduced references
-        if (currentContent !== value || forceRerenderRef.current) {
+        // Check if value contains references that aren't rendered as chips yet
+        const segments = parseContent(value);
+        const hasUnrenderedRefs = segments.some(s => s.type === 'reference') &&
+            !contentEditableRef.current.querySelector('[data-reference]');
+
+        // Update if content changed, references need rendering, or forced
+        if (currentContent !== value || hasUnrenderedRefs || forceRerenderRef.current) {
             forceRerenderRef.current = false;
             isUpdatingRef.current = true;
 
@@ -402,8 +407,7 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
                 }
             }
 
-            // Parse and render new content
-            const segments = parseContent(value);
+            // Render content (segments already parsed above)
             const container = contentEditableRef.current;
             container.innerHTML = '';
 

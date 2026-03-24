@@ -137,10 +137,5 @@ export function createMockConfig(): AgentInputConfig {
       save: (message) => console.log('[Demo] History saved:', message),
     },
 
-    extractReferences: (text) => [],
-    parseReferences: (text) => ({
-      references: [],
-      segments: [{ type: 'text', content: text }],
-    }),
   };
 }

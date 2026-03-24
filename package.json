@@ -65,5 +65,8 @@
     "mentions",
     "speech",
     "workflow"
-  ]
+  ],
+  "dependencies": {
+    "free-text-json-parser": "^0.0.1"
+  }
 }

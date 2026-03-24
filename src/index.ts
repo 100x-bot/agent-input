@@ -1,6 +1,6 @@
 // Context
 export { AgentInputProvider, useAgentInput } from './context/AgentInputProvider';
-export type { AgentInputConfig } from './context/AgentInputProvider';
+export type { AgentInputConfig, ResolvedAgentInputConfig } from './context/AgentInputProvider';
 
 // Main component
 export { default as AgentStatusBar } from './components/AgentStatusBar';
@@ -57,3 +57,6 @@ export type {
 } from './types';
 
 export { getReferenceIcon, getReferenceColorClasses, getReferenceColorStyle } from './types';
+
+// Reference parser utilities
+export { parseReferences, extractReferences } from './utils/referenceParser';
