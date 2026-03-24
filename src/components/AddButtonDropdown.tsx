@@ -60,14 +60,17 @@ const AddButtonDropdown: React.FC<AddButtonDropdownProps> = ({
         <div className="relative group" onKeyDown={handleKeyDown}>
             <button
                 onClick={onToggle}
-                className="border border-[#cbd5e1] bg-white rounded-[0.5rem] w-[2rem] h-[2rem] flex items-center justify-center text-[#1e293b] cursor-pointer hover:bg-[#f1f5f9] transition-colors"
+                className="rounded-[0.5rem] w-[2rem] h-[2rem] flex items-center justify-center cursor-pointer transition-colors"
+                style={{ border: '1px solid var(--ai-border-default)', backgroundColor: 'var(--ai-surface-primary)', color: 'var(--ai-text-secondary)' }}
+                aria-label="Add a tab, workflow or file"
+                aria-expanded={isOpen}
             >
                 <Plus className="w-[1rem] h-[1rem]" strokeWidth={1.5} />
             </button>
 
             {/* Tooltip */}
             <div className="absolute bottom-full left-0 mb-2 z-50 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200">
-                <div className="bg-[#2C2949] text-white text-[0.75rem] rounded-[0.25rem] px-[0.75rem] py-[0.25rem] whitespace-nowrap font-[500]">
+                <div className="text-[0.75rem] rounded-[0.25rem] px-[0.75rem] py-[0.25rem] whitespace-nowrap font-[500]" style={{ backgroundColor: 'var(--ai-surface-tooltip)', color: 'var(--ai-text-on-dark)' }}>
                     Add a tab, workflow or file
                 </div>
             </div>
@@ -81,18 +84,17 @@ const AddButtonDropdown: React.FC<AddButtonDropdownProps> = ({
                         onClick={onClose}
                     />
 
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/3 ml-20 mb-1 z-50 rounded-lg w-[300px]  border-1 border-[#ECEEF2] overflow-hidden bg-[#FBFBF9]">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/3 ml-20 mb-1 z-50 rounded-lg w-[300px] overflow-hidden" role="listbox" aria-label="Add items" style={{ border: '1px solid var(--ai-border-dropdown)', backgroundColor: 'var(--ai-surface-dropdown)' }}>
                         <div
                             className="py-4 px-3 overflow-y-auto overflow-hidden max-h-[240px]"
                             style={{
                                 scrollbarWidth: "none",
-                                boxShadow: "0 2px 8px 1px rgba(0, 0, 0, 0.10)",
+                                boxShadow: "var(--ai-shadow-dropdown)",
                             }}
                         >
                             {sections.map((section, sectionIndex) => (
                                 <div key={sectionIndex}>
-                                    <div className={`text-[12px] font-[400] pb-1 font-dm-mono text-[#9D9DA7] border-b border-[#F0F1F4] ${sectionIndex === 0 ? "pt-0" : "pt-4"
-                                        }`}>
+                                    <div className={`text-[12px] font-[400] pb-1 font-dm-mono ${sectionIndex === 0 ? "pt-0" : "pt-4"}`} style={{ color: 'var(--ai-text-label)', borderBottom: '1px solid var(--ai-border-section)' }}>
                                         {section.label}
                                     </div>
                                     {section.items.map((item, itemIndex) => {
@@ -102,6 +104,8 @@ const AddButtonDropdown: React.FC<AddButtonDropdownProps> = ({
                                         return (
                                             <button
                                                 key={itemIndex}
+                                                role="option"
+                                                aria-selected={isSelected}
                                                 ref={isSelected ? (el) => {
                                                     if (el) {
                                                         el.scrollIntoView({ block: 'nearest' });
@@ -111,9 +115,8 @@ const AddButtonDropdown: React.FC<AddButtonDropdownProps> = ({
                                                     onSelect(item.mention);
                                                     onClose();
                                                 }}
-                                                className={`w-full px-3 py-1.5 cursor-pointer flex items-center gap-3 text-left rounded-sm ${itemIndex === 0 ? "mt-2" : ""} ${isSelected
-                                                    ? "bg-[#F0F1F4] text-[#2C2949]"
-                                                    : "hover:bg-[#F0F1F4] text-[#2C2949]"}`}
+                                                className={`w-full px-3 py-1.5 cursor-pointer flex items-center gap-3 text-left rounded-sm ${itemIndex === 0 ? "mt-2" : ""}`}
+                                                style={{ color: 'var(--ai-text-brand)', backgroundColor: isSelected ? 'var(--ai-border-section)' : undefined }}
                                             >
                                                 {item.favIconUrl ? (
                                                     <img

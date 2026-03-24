@@ -1,9 +1,22 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { MousePointer, Keyboard, Navigation } from 'lucide-react';
 
 // Recording Animation Component (Data Stream style from reference)
 export default function RecordingAnimation() {
+    const shouldReduceMotion = useReducedMotion();
+
+    if (shouldReduceMotion) {
+        return (
+            <div className="flex items-center justify-center w-full h-full" style={{ backgroundColor: 'var(--ai-surface-tertiary)' }}>
+                <div className="flex items-center gap-4">
+                    <MousePointer className="w-5 h-5" style={{ color: 'var(--ai-text-muted)' }} />
+                    <Keyboard className="w-5 h-5" style={{ color: 'var(--ai-text-muted)' }} />
+                    <Navigation className="w-5 h-5" style={{ color: 'var(--ai-text-muted)' }} />
+                </div>
+            </div>
+        );
+    }
     const dataColumns = 10;
     const icons = [MousePointer, Keyboard, Navigation];
 

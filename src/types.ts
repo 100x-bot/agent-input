@@ -119,15 +119,31 @@ export function getReferenceIcon(type: Reference['type']): string {
 }
 
 export function getReferenceColorClasses(type: Reference['type']): string {
+  // Note: DOM and tab references share one palette, file/workflow share another.
+  // Page/selection/screenshot use Tailwind utility colors as they're less common.
   switch (type) {
-    case 'dom': return 'bg-[#E3E6F2] text-[#2C2949] border-[#979FBE]';
-    case 'file': return 'bg-[#DEE8E5] text-[#2C2949] border-[#B1C2BC]';
-    case 'workflow': return 'bg-[#DEE8E5] text-[#2C2949] border-[#B1C2BC]';
-    case 'tab': return 'bg-[#E3E6F2] text-[#2C2949] border-[#979FBE]';
+    case 'dom': return 'border';
+    case 'file': return 'border';
+    case 'workflow': return 'border';
+    case 'tab': return 'border';
     case 'page': return 'bg-yellow-100 text-yellow-800';
     case 'selection': return 'bg-pink-100 text-pink-800';
-    case 'screenshot': return 'bg-[#E3E6F2] text-[#2C2949] border-[#979FBE]';
+    case 'screenshot': return 'border';
     default: return 'bg-gray-100 text-gray-800';
+  }
+}
+
+export function getReferenceColorStyle(type: Reference['type']): Record<string, string> {
+  switch (type) {
+    case 'dom':
+    case 'tab':
+    case 'screenshot':
+      return { backgroundColor: 'var(--ai-ref-dom-bg)', color: 'var(--ai-text-brand)', borderColor: 'var(--ai-ref-dom-border)' };
+    case 'file':
+    case 'workflow':
+      return { backgroundColor: 'var(--ai-ref-file-bg)', color: 'var(--ai-text-brand)', borderColor: 'var(--ai-ref-file-border)' };
+    default:
+      return {};
   }
 }
 

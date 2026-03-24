@@ -573,7 +573,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const mentionSections = getMentionSuggestions();
 
     return (
-        <div ref={scrollContainerRef} className="pb-1 flex flex-col z-[50] overflow-visible"
+        <div ref={scrollContainerRef} className="pb-1 flex flex-col z-10 overflow-visible"
             style={{ scrollbarWidth: 'none' }}>
             <div className="flex-col flex items-center justify-center">
                 {/* Hidden file input */}
@@ -607,7 +607,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                 op.includes('generating code')
                             ));
                             return (
-                                <div className={`rounded-[1.25rem] overflow-visible ${isWorkflowActive ? 'bg-[#0f172a]' : 'bg-[#e2e8f0]'}`}>
+                                <div className={`rounded-[1.25rem] overflow-visible`} style={{ backgroundColor: isWorkflowActive ? 'var(--ai-surface-workflow-bar)' : 'var(--ai-surface-active)' }}>
                                     {/* Agent Header - always visible */}
                                     <div className={isWorkflowActive ? '' : 'px-[0.5rem] rounded-t-[0.75rem]'}>
                                         <AgentHeader
@@ -620,14 +620,18 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                     {/* Inner white input container */}
                                     <div
                                         ref={containerRef}
-                                        className="relative flex flex-col bg-white items-stretch rounded-[1.25rem] border border-[#e2e8f0] hover:border-[#BCBBF7] focus-within:border-[#3870FF] focus-within:ring-1 focus-within:ring-[#3870FF] overflow-visible transition-colors duration-200"
-                                        style={{ boxShadow: "0 0.25rem 0.375rem -0.25rem rgba(0, 0, 0, 0.1), 0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1)" }}
+                                        className="relative flex flex-col items-stretch rounded-[1.25rem] overflow-visible transition-colors duration-200"
+                                        style={{
+                                            backgroundColor: 'var(--ai-surface-input-bg)',
+                                            border: '1px solid var(--ai-border-subtle)',
+                                            boxShadow: 'var(--ai-shadow-md)',
+                                        }}
                                     >
                                         {/* Error details - show when there's an error */}
                                         {((status.state === "error" && status.error && status.error !== dismissedError) || speechRecognition.error) && (
-                                            <div className="px-[1rem] pt-[0.75rem] pb-[0.5rem] border-b border-[#f1f5f9]">
-                                                <div className="bg-[#FFF1F0] border border-[#FFCCC9] rounded-[0.375rem] p-[0.25rem] text-[0.575rem] flex items-start justify-between gap-2">
-                                                    <p className="break-words text-[#DC2626] flex-1">
+                                            <div className="px-[1rem] pt-[0.75rem] pb-[0.5rem]" style={{ borderBottom: '1px solid var(--ai-border-subtle)' }}>
+                                                <div className="rounded-[0.375rem] p-[0.5rem] text-[0.75rem] flex items-start justify-between gap-2" style={{ backgroundColor: 'var(--ai-status-error-bg)', border: '1px solid var(--ai-status-error-border)' }}>
+                                                    <p className="break-words flex-1" style={{ color: 'var(--ai-status-error)' }}>
                                                         {(status.state === "error" && status.error && status.error !== dismissedError) ? status.error : speechRecognition.error?.message}
                                                     </p>
                                                     <button
@@ -635,7 +639,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                             if (speechRecognition.error) speechRecognition.resetError();
                                                             if (status.state === "error" && status.error) setDismissedError(status.error);
                                                         }}
-                                                        className="text-[#DC2626] hover:text-[#991B1B] transition-colors flex-shrink-0"
+                                                        className="transition-colors flex-shrink-0"
+                                                        style={{ color: 'var(--ai-status-error)' }}
                                                         aria-label="Dismiss error"
                                                     >
                                                         <X className="w-4 h-4" />
@@ -665,7 +670,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                             return placeholder || 'Type @ for adding tabs or workflows';
                                                         })()}
                                                         placeholderClassName="text-[0.875rem] leading-[1.25rem] text-[#94a3b8]"
-                                                        className="w-full bg-transparent border-0 focus:outline-none text-[0.875rem] text-[#0f172a] placeholder:text-[#94a3b8] overflow-y-auto theme-transition leading-[1.25rem] min-h-[1.5rem] max-h-[12rem]"
+                                                        className="w-full bg-transparent border-0 focus:outline-none text-[0.875rem] overflow-y-auto theme-transition leading-[1.25rem] min-h-[1.5rem] max-h-[12rem]"
+                                                        style={{ color: 'var(--ai-text-primary)' } as React.CSSProperties}
                                                         style={{ minHeight: "3rem", maxHeight: "12rem", fieldSizing: "content" }}
                                                         domElementsMap={domElementsRef.current}
                                                         onRemoveDOMElement={removeDOMElement}

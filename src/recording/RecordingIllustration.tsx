@@ -1,9 +1,10 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { MousePointer2, Type, Navigation2, Globe } from 'lucide-react';
 
 // Recording Illustration Component (from reference)
 export default function RecordingIllustration() {
+    const shouldReduceMotion = useReducedMotion();
     return (
         <div className="flex items-center justify-center w-full h-full relative overflow-hidden">
             {/* Background grid */}
@@ -32,7 +33,7 @@ export default function RecordingIllustration() {
                 <div className="p-4 space-y-3">
                     {/* Animated cursor clicking */}
                     <motion.div
-                        animate={{
+                        animate={shouldReduceMotion ? undefined : {
                             x: [0, 40, 40, 80, 80, 0],
                             y: [0, 0, 30, 30, 60, 60],
                         }}
@@ -89,7 +90,7 @@ export default function RecordingIllustration() {
 
                 {/* Recording indicator */}
                 <motion.div
-                    animate={{ opacity: [1, 0.3, 1] }}
+                    animate={shouldReduceMotion ? undefined : { opacity: [1, 0.3, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                     className="absolute top-2 right-2 flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded-full"
                 >

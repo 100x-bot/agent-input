@@ -28,17 +28,24 @@ const MentionsDropdown = forwardRef<HTMLDivElement, MentionsDropdownProps>(({
     return (
         <div
             ref={ref}
-            className="absolute bottom-full w-[80vw] max-w-[400px] left-0 mb-1 border-1 border-[#ECEEF2] bg-[#FBFBF9] max-h-80 overflow-y-auto z-[900] px-3 py-5 rounded-lg"
+            role="listbox"
+            aria-label="Suggestions"
+            className="absolute bottom-full w-[80vw] max-w-[400px] left-0 mb-1 max-h-80 overflow-y-auto z-[900] px-3 py-5 rounded-lg"
             style={{
                 scrollbarWidth: "none",
-                boxShadow: "0 2px 8px 1px rgba(0, 0, 0, 0.10)",
+                border: '1px solid var(--ai-border-dropdown)',
+                backgroundColor: 'var(--ai-surface-dropdown)',
+                boxShadow: 'var(--ai-shadow-dropdown)',
             }}
         >
             {sections.map((section, sectionIndex) => (
-                <div key={sectionIndex}>
+                <div key={sectionIndex} role="group" aria-label={section.label}>
                     <div
-                        className={`text-[12px] font-[400] pb-1 font-dm-mono text-[#9D9DA7] border-b border-[#F0F1F4] ${sectionIndex === 0 ? "pt-0" : "pt-4"
-                            }`}>
+                        className={`text-[12px] font-[400] pb-1 font-dm-mono ${sectionIndex === 0 ? "pt-0" : "pt-4"}`}
+                        style={{
+                            color: 'var(--ai-text-label)',
+                            borderBottom: '1px solid var(--ai-border-section)',
+                        }}>
                         {section.label}
                     </div>
                     {section.items.map((item, itemIndex) => {
@@ -46,17 +53,20 @@ const MentionsDropdown = forwardRef<HTMLDivElement, MentionsDropdownProps>(({
                         const isSelected = selectedIndex === flatIndex;
 
                         return (
-                            <div
+                            <button
                                 key={itemIndex}
                                 ref={isSelected ? (el) => {
                                     if (el) {
                                         el.scrollIntoView({ block: 'nearest' });
                                     }
                                 } : null}
-                                className={`px-3 py-1.5 overflow-hidden cursor-pointer flex items-center gap-3 ${isSelected
-                                    ? "bg-[#F0F1F4]"
-                                    : "hover:bg-[#F0F1F4] text-[#2C2949]"
-                                    } ${itemIndex === 0 ? "mt-2" : ""}`}
+                                role="option"
+                                aria-selected={isSelected}
+                                className={`w-full px-3 py-1.5 overflow-hidden cursor-pointer flex items-center gap-3 text-left rounded-sm ${itemIndex === 0 ? "mt-2" : ""}`}
+                                style={{
+                                    backgroundColor: isSelected ? 'var(--ai-border-section)' : undefined,
+                                    color: 'var(--ai-text-brand)',
+                                }}
                                 onMouseDown={(e) => {
                                     e.preventDefault();
                                     onSelect(item.mention);
@@ -67,7 +77,7 @@ const MentionsDropdown = forwardRef<HTMLDivElement, MentionsDropdownProps>(({
                                         {item.displayText}
                                     </span>
                                 </div>
-                            </div>
+                            </button>
                         );
                     })}
                 </div>

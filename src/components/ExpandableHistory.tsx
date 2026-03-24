@@ -1,4 +1,5 @@
 import React from 'react';
+import LoadingSpinner from './LoadingSpinner';
 
 export interface ExpandableHistoryProps {
     items: string[];
@@ -9,18 +10,18 @@ export interface ExpandableHistoryProps {
 }
 
 const ClockIcon = () => (
-    <svg className="w-4 h-4 text-theme-text-muted" fill="none" viewBox="0 0 16 16">
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" style={{ color: 'var(--ai-text-muted)' }}>
         <g clipPath="url(#clip0_9095_4025)">
             <circle
                 cx="7.99967"
                 cy="7.99967"
                 r="6.66667"
-                stroke="#5E5D73"
+                stroke="currentColor"
                 strokeWidth="1.14286"
             />
             <path
                 d="M8 5.33301V7.99967L9.33333 9.33301"
-                stroke="#5E5D73"
+                stroke="currentColor"
                 strokeWidth="1.14286"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -31,34 +32,6 @@ const ClockIcon = () => (
                 <rect width="16" height="16" fill="white" />
             </clipPath>
         </defs>
-    </svg>
-);
-
-const LoadingSpinner = () => (
-    <svg className="w-4 h-4 text-theme-text-muted animate-spin" fill="none" viewBox="0 0 16 16">
-        <circle
-            cx="8"
-            cy="8"
-            r="6"
-            stroke="#5E5D73"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeDasharray="31.416"
-            strokeDashoffset="31.416"
-        >
-            <animate
-                attributeName="stroke-dasharray"
-                dur="2s"
-                values="0 31.416;15.708 15.708;0 31.416"
-                repeatCount="indefinite"
-            />
-            <animate
-                attributeName="stroke-dashoffset"
-                dur="2s"
-                values="0;-15.708;-31.416"
-                repeatCount="indefinite"
-            />
-        </circle>
     </svg>
 );
 
@@ -74,8 +47,8 @@ const ExpandableHistory: React.FC<ExpandableHistoryProps> = ({
     }
 
     return (
-        <div className="px-[24px] pt-[20px] pb-[18px]">
-            <h3 className="text-[#5E5D73] mb-2 font-dm-mono text-[12px] font-[400]">
+        <div className="px-[24px] pt-[20px] pb-[18px]" style={{ color: 'var(--ai-text-muted)' }}>
+            <h3 className="mb-2 font-dm-mono text-[12px] font-[400]">
                 History
             </h3>
             <div className="flex flex-col items-stretch">
@@ -112,7 +85,7 @@ const ExpandableHistory: React.FC<ExpandableHistoryProps> = ({
                             <div className="w-4 h-4">
                                 <ClockIcon />
                             </div>
-                            <span className="text-sm text-[#5E5D73] line-clamp-1 truncate text-[14px] font-[400]">
+                            <span className="text-sm text-inherit line-clamp-1 truncate text-[14px] font-[400]">
                                 {historyItem}
                             </span>
                         </div>

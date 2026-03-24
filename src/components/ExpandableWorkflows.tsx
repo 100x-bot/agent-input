@@ -1,5 +1,6 @@
 import React from 'react';
 import type { WorkflowData } from '../types';
+import LoadingSpinner from './LoadingSpinner';
 
 export interface ExpandableWorkflowsProps {
     workflows: WorkflowData[];
@@ -33,34 +34,6 @@ const WorkflowIcon = () => (
     </svg>
 );
 
-const LoadingSpinner = () => (
-    <svg className="w-4 h-4 text-theme-text-muted animate-spin" fill="none" viewBox="0 0 16 16">
-        <circle
-            cx="8"
-            cy="8"
-            r="6"
-            stroke="#5E5D73"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeDasharray="31.416"
-            strokeDashoffset="31.416"
-        >
-            <animate
-                attributeName="stroke-dasharray"
-                dur="2s"
-                values="0 31.416;15.708 15.708;0 31.416"
-                repeatCount="indefinite"
-            />
-            <animate
-                attributeName="stroke-dashoffset"
-                dur="2s"
-                values="0;-15.708;-31.416"
-                repeatCount="indefinite"
-            />
-        </circle>
-    </svg>
-);
-
 const ExpandableWorkflows: React.FC<ExpandableWorkflowsProps> = ({
     workflows,
     isLoading,
@@ -74,8 +47,8 @@ const ExpandableWorkflows: React.FC<ExpandableWorkflowsProps> = ({
     }
 
     return (
-        <div className="px-[24px] pt-[20px] pb-[18px]">
-            <h3 className="text-[#5E5D73] mb-2 font-dm-mono text-[12px] font-[400]">
+        <div className="px-[24px] pt-[20px] pb-[18px]" style={{ color: 'var(--ai-text-muted)' }}>
+            <h3 className="mb-2 font-dm-mono text-[12px] font-[400]">
                 Workflows
             </h3>
             <div className="flex flex-col items-stretch">
@@ -85,7 +58,7 @@ const ExpandableWorkflows: React.FC<ExpandableWorkflowsProps> = ({
                         <div className="w-4 h-4">
                             <LoadingSpinner />
                         </div>
-                        <span className="text-sm text-[#5E5D73] text-[14px] font-[400]">
+                        <span className="text-sm text-inherit text-[14px] font-[400]">
                             Loading workflows...
                         </span>
                     </div>
@@ -108,7 +81,7 @@ const ExpandableWorkflows: React.FC<ExpandableWorkflowsProps> = ({
                             <div className="w-4 h-4">
                                 <WorkflowIcon />
                             </div>
-                            <span className="text-sm text-[#5E5D73] line-clamp-1 truncate text-[14px] font-[400]">
+                            <span className="text-sm text-inherit line-clamp-1 truncate text-[14px] font-[400]">
                                 {workflow.name}
                             </span>
                         </div>

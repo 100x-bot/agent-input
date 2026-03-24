@@ -77,14 +77,9 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
       if (response.success) {
         setSelectedModel(response.data);
       } else {
-        console.error(
-          "[ModelSelector] Failed to load selected model:",
-          response.error
-        );
         setSelectedModel("claude-haiku-4-5-20251001"); // Fallback
       }
     } catch (error) {
-      console.error("[ModelSelector] Failed to load selected model:", error);
       setSelectedModel("claude-haiku-4-5-20251001"); // Fallback
     }
   };
@@ -117,42 +112,19 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
           model.provider?.toLowerCase()?.includes("portkey") ||
           model.id.toLowerCase().includes("portkey");
 
-        console.log(
-          "[ModelSelector] Checking model:",
-          model.id,
-          "provider:",
-          model.provider,
-          "isVertex:",
-          isVertex,
-          "isClaude:",
-          isClaude,
-          "isPortkey:",
-          isPortkey
-        );
-
         if (isVertex && isClaude) {
-          console.log(
-            "[ModelSelector] Filtering out Claude model from vertex:",
-            model.id
-          );
           return false;
         }
 
         if (isPortkey) {
-          console.log("[ModelSelector] Filtering out Portkey model:", model.id);
           return false;
         }
 
         return true;
       });
       setModels(filteredModels);
-      console.log(
-        "[ModelSelector] Loaded models:",
-        filteredModels.length,
-        "total models (filtered out Claude models from vertex)"
-      );
     } catch (err) {
-      console.error("[ModelSelector] Failed to load models:", err);
+      // silently handle error
     } finally {
       setIsLoadingModels(false);
     }
@@ -177,13 +149,12 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
         throw new Error(response.error || "Failed to save model config");
       }
 
-      console.log("[ModelSelector] Model selection saved:", modelId);
       if (onModelSelect) {
         onModelSelect(modelId);
       }
       onClose();
     } catch (err) {
-      console.error("[ModelSelector] Failed to save model selection:", err);
+      // silently handle error
     }
   };
 
@@ -192,15 +163,15 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
     const provider = model.provider?.toLowerCase() || "";
 
     if (name.includes("claude") || provider.includes("anthropic")) {
-      return <Brain className="w-[1.25rem] h-[1.25rem] text-[#1e293b]" strokeWidth={2} />;
+      return <Brain className="w-[1.25rem] h-[1.25rem]" style={{ color: 'var(--ai-text-secondary)' }} strokeWidth={2} />;
     }
     if (name.includes("gemini") || provider.includes("google")) {
-      return <Sparkles className="w-[1.25rem] h-[1.25rem] text-[#1e293b]" strokeWidth={2} />;
+      return <Sparkles className="w-[1.25rem] h-[1.25rem]" style={{ color: 'var(--ai-text-secondary)' }} strokeWidth={2} />;
     }
     if (name.includes("gpt") || provider.includes("openai")) {
-      return <Box className="w-[1.25rem] h-[1.25rem] text-[#1e293b]" strokeWidth={2} />;
+      return <Box className="w-[1.25rem] h-[1.25rem]" style={{ color: 'var(--ai-text-secondary)' }} strokeWidth={2} />;
     }
-    return <Box className="w-[1.25rem] h-[1.25rem] text-[#1e293b]" strokeWidth={2} />;
+    return <Box className="w-[1.25rem] h-[1.25rem]" style={{ color: 'var(--ai-text-secondary)' }} strokeWidth={2} />;
   };
 
   if (!isOpen) return null;
@@ -215,8 +186,14 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
           ref={containerRef}
           tabIndex={-1}
           onKeyDown={handleKeyDown}
-          className="bg-white rounded-[0.75rem] border border-[#cbd5e1] p-[0.75rem] flex flex-col gap-[0.25rem] overflow-hidden outline-none"
-          style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)" }}
+          role="listbox"
+          aria-label="Select model"
+          className="rounded-[0.75rem] p-[0.75rem] flex flex-col gap-[0.25rem] overflow-hidden outline-none"
+          style={{
+            backgroundColor: 'var(--ai-surface-primary)',
+            border: '1px solid var(--ai-border-default)',
+            boxShadow: 'var(--ai-shadow-sm)',
+          }}
         >
           {/* List container */}
           <div
@@ -225,11 +202,17 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
           >
             {isLoadingModels ? (
               <div className="flex items-center justify-center py-4">
-                <div className="animate-spin h-5 w-5 border-2 border-[#cbd5e1] border-t-[#3870FF] rounded-full" />
+                <div
+                  className="animate-spin h-5 w-5 rounded-full"
+                  style={{
+                    border: '2px solid var(--ai-border-default)',
+                    borderTopColor: 'var(--ai-status-working)',
+                  }}
+                />
               </div>
             ) : models.length === 0 ? (
               <div className="text-center py-4">
-                <p className="text-[0.875rem] text-[#64748b]">
+                <p className="text-[0.875rem]" style={{ color: 'var(--ai-text-muted)' }}>
                   No models available
                 </p>
               </div>
@@ -242,16 +225,30 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
                   return (
                     <button
                       key={model.id}
+                      role="option"
+                      aria-selected={isSelected}
                       ref={isFocused ? (el) => {
                         if (el) {
                           el.scrollIntoView({ block: 'nearest' });
                         }
                       } : null}
                       onClick={() => handleModelChange(model.id)}
-                      className={`
-                        w-full flex items-center justify-between px-[0.5rem] h-[2.5rem] rounded-[0.5rem] transition-colors text-left group
-                        ${isFocused || isSelected ? "bg-[#f1f5f9]" : "hover:bg-[#f8fafc]"}
-                      `}
+                      className="w-full flex items-center justify-between px-[0.5rem] h-[2.5rem] rounded-[0.5rem] transition-colors text-left group"
+                      style={{
+                        backgroundColor: isFocused || isSelected
+                          ? 'var(--ai-surface-tertiary)'
+                          : undefined,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isFocused && !isSelected) {
+                          e.currentTarget.style.backgroundColor = 'var(--ai-surface-secondary)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isFocused && !isSelected) {
+                          e.currentTarget.style.backgroundColor = '';
+                        }
+                      }}
                     >
                       <div className="flex items-center gap-[0.5rem] min-w-0 flex-1">
                         {/* Icon */}
@@ -259,13 +256,20 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
                           {getModelIcon(model)}
                         </div>
                         {/* Name */}
-                        <span className={`text-[0.875rem] truncate ${isSelected || isFocused ? "font-[500] text-[#0f172a]" : "font-[400] text-[#334155]"}`}>
+                        <span
+                          className={`text-[0.875rem] truncate ${isSelected || isFocused ? "font-[500]" : "font-[400]"}`}
+                          style={{
+                            color: isSelected || isFocused
+                              ? 'var(--ai-text-primary)'
+                              : 'var(--ai-text-tertiary)',
+                          }}
+                        >
                           {model.name || model.id}
                         </span>
                       </div>
 
                       {isSelected && (
-                        <Check className="w-[1rem] h-[1rem] text-[#3870FF] flex-shrink-0 ml-2" strokeWidth={2.5} />
+                        <Check className="w-[1rem] h-[1rem] flex-shrink-0 ml-2" style={{ color: 'var(--ai-status-working)' }} strokeWidth={2.5} />
                       )}
                     </button>
                   );

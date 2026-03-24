@@ -51,3 +51,25 @@ npm publish
 ```
 
 Package is `@100xbot/agent-input` on npm, public access.
+
+## Design Context
+
+### Users
+Mixed audience of technical and non-technical users interacting with an AI agent chat interface. Users range from developers automating browser tasks to business professionals creating workflows. The interface should balance power with accessibility — never intimidating, never dumbed-down.
+
+### Brand Personality
+**Warm & Approachable** — friendly, inviting, human. Three words: *helpful, clear, trustworthy*.
+
+### Aesthetic Direction
+- **Visual tone:** Clean and warm, inspired by Notion/Slack's approachability with Linear/Vercel's polish
+- **References:** ChatGPT/Claude.ai, Linear/Vercel, Slack/Notion
+- **Theme:** Support both light and dark modes, host app controls which is active
+- **Colors:** Muted, professional palette. Avoid neon/saturated hues and gradients. Slate grays with status colors (green=ready, blue=working, red=error, amber=waiting). Brand navy `#292656`.
+- **Motion:** Framer Motion for meaningful transitions — purposeful, not decorative
+
+### Design Principles
+1. **Clarity over cleverness** — Every element should communicate its purpose immediately
+2. **Warm minimalism** — Strip away the unnecessary, keep enough warmth (rounded corners, soft shadows, gentle transitions)
+3. **Transparent agency** — The agent's state should always be visible and honest
+4. **Accessible by default** — WCAG AA compliance
+5. **Adaptive, not duplicated** — Single design system adapting to light/dark via CSS variables or Tailwind dark mode

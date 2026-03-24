@@ -197,6 +197,9 @@ export default function WorkflowReview({ onClose, onApprove, workflowPlan }: Wor
             <div className="fixed inset-0 z-[200] bg-black/40" onClick={onClose} />
             <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none">
                 <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Review Workflow"
                     className="pointer-events-auto w-full max-w-[360px] h-[680px] max-h-[calc(100vh-32px)] bg-white rounded-[18px] shadow-xl overflow-hidden flex flex-col border border-[#cbd5e1]"
                     onClick={(e) => e.stopPropagation()}
                 >

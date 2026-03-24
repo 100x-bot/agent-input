@@ -56,4 +56,4 @@ export type {
   ContentSegment,
 } from './types';
 
-export { getReferenceIcon, getReferenceColorClasses } from './types';
+export { getReferenceIcon, getReferenceColorClasses, getReferenceColorStyle } from './types';
