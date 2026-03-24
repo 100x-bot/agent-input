@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, Check, Hammer, MessageSquare } from 'lucide-react';
+import { ChevronDown, Check, Hammer, MessageSquare } from '../icons';
 import type { DisplayMode } from '../types';
 
 export interface ChatModeSwitcherProps {

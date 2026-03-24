@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Mic, X } from 'lucide-react';
+import { Mic, X } from '../icons';
 
 interface ListeningNotificationProps {
   isListening: boolean;

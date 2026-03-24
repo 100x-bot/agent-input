@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Check, Sparkles, Box, Brain } from "lucide-react";
+import { Check, Sparkles, Box, Brain } from "../icons";
 import { useAgentInput } from "../context/AgentInputProvider";
 import type { LLMModel, ModelSelectionConfig } from "../types";
 import { useDropdownNavigation } from "../hooks/useDropdownNavigation";

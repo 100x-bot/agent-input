@@ -10,7 +10,7 @@ import {
     AppWindow,
     ScanText,
     Settings
-} from "lucide-react";
+} from "../icons";
 import { AgentStatus } from "../types";
 
 export interface AgentHeaderProps {

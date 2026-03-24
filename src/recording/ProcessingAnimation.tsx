@@ -1,52 +1,41 @@
-import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { Cpu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Cpu } from '../icons';
 
 export default function ProcessingAnimation() {
-    const shouldReduceMotion = useReducedMotion();
+    const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
+
+    useEffect(() => {
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        setShouldReduceMotion(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
     return (
         <div className="relative w-full h-[280px] overflow-hidden rounded-[16px] flex items-center justify-center"
             style={{ backgroundColor: 'var(--ai-surface-tertiary)' }}>
             {/* Central processing indicator */}
             <div className="relative flex items-center justify-center">
-                {/* Pulsing ring */}
+                {/* Pulsing rings */}
                 {!shouldReduceMotion && (
                     <>
-                        <motion.div
+                        <div
                             className="absolute rounded-full"
                             style={{
                                 width: '100px',
                                 height: '100px',
                                 border: '2px solid var(--ai-status-working)',
-                                opacity: 0.2,
-                            }}
-                            animate={{
-                                scale: [1, 1.3, 1],
-                                opacity: [0.2, 0.05, 0.2],
-                            }}
-                            transition={{
-                                duration: 2.5,
-                                repeat: Infinity,
-                                ease: "easeInOut"
+                                animation: 'ai-pulse-ring 2.5s ease-in-out infinite',
                             }}
                         />
-                        <motion.div
+                        <div
                             className="absolute rounded-full"
                             style={{
                                 width: '80px',
                                 height: '80px',
                                 border: '2px solid var(--ai-status-working)',
-                                opacity: 0.15,
-                            }}
-                            animate={{
-                                scale: [1, 1.4, 1],
-                                opacity: [0.15, 0.03, 0.15],
-                            }}
-                            transition={{
-                                duration: 2.5,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                delay: 0.8,
+                                animation: 'ai-pulse-ring 2.5s ease-in-out 0.8s infinite',
                             }}
                         />
                     </>
@@ -61,16 +50,9 @@ export default function ProcessingAnimation() {
                         backgroundColor: 'var(--ai-status-working)',
                     }}
                 >
-                    <motion.div
-                        animate={shouldReduceMotion ? undefined : { rotate: 360 }}
-                        transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: "linear"
-                        }}
-                    >
+                    <div style={shouldReduceMotion ? undefined : { animation: 'ai-rotate 4s linear infinite' }}>
                         <Cpu className="w-7 h-7" style={{ color: 'var(--ai-text-on-dark)' }} strokeWidth={1.5} />
-                    </motion.div>
+                    </div>
                 </div>
             </div>
 
@@ -85,6 +67,18 @@ export default function ProcessingAnimation() {
                     <rect width="100%" height="100%" fill="url(#dotGrid)" />
                 </svg>
             </div>
+
+            <style>{`
+                @keyframes ai-pulse-ring {
+                    0% { transform: scale(1); opacity: 0.2; }
+                    50% { transform: scale(1.3); opacity: 0.05; }
+                    100% { transform: scale(1); opacity: 0.2; }
+                }
+                @keyframes ai-rotate {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 }

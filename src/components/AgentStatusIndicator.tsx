@@ -1,5 +1,5 @@
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "../icons";
 import { AgentStatus } from "../types";
 
 export interface AgentStatusIndicatorProps {

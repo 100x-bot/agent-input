@@ -12,7 +12,7 @@ export default defineConfig([
     splitting: true,
     treeshake: true,
     clean: true,
-    external: ['react', 'react-dom', 'lucide-react', 'framer-motion'],
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
     outExtension({ format }) {
       return {
         js: format === 'esm' ? '.mjs' : '.cjs',

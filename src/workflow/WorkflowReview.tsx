@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface WorkflowStep {
     level: 'L2' | 'L1' | 'L0';
@@ -99,21 +98,17 @@ function L1Item({ step, isLast }: { step: WorkflowStep; isLast: boolean }) {
                 </div>
 
                 {/* L0 Children */}
-                <AnimatePresence>
-                    {hasChildren && expanded && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="bg-[#f1f5f9] border border-t-0 border-[#cbd5e1] rounded-b-lg pl-4 pr-1 overflow-hidden"
-                        >
-                            {step.children!.map((child, idx) => (
-                                <L0Item key={idx} step={child} />
-                            ))}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {hasChildren && (
+                    <div style={{ display: 'grid', gridTemplateRows: expanded ? '1fr' : '0fr', transition: 'grid-template-rows 0.2s ease-out' }}>
+                        <div style={{ overflow: 'hidden' }}>
+                            <div className="bg-[#f1f5f9] border border-t-0 border-[#cbd5e1] rounded-b-lg pl-4 pr-1">
+                                {step.children!.map((child, idx) => (
+                                    <L0Item key={idx} step={child} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -134,25 +129,21 @@ function WorkflowGroup({ step, isExpanded, onToggle }: { step: WorkflowStep; isE
             </div>
 
             {/* Expandable Content */}
-            <AnimatePresence>
-                {isExpanded && step.children && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="bg-white px-4 overflow-hidden"
-                    >
-                        {step.children.map((child, idx) => (
-                            <L1Item
-                                key={idx}
-                                step={child}
-                                isLast={idx === step.children!.length - 1}
-                            />
-                        ))}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {step.children && (
+                <div style={{ display: 'grid', gridTemplateRows: isExpanded ? '1fr' : '0fr', transition: 'grid-template-rows 0.2s ease-out' }}>
+                    <div style={{ overflow: 'hidden' }}>
+                        <div className="bg-white px-4">
+                            {step.children.map((child, idx) => (
+                                <L1Item
+                                    key={idx}
+                                    step={child}
+                                    isLast={idx === step.children!.length - 1}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

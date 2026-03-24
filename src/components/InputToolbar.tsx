@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, Send, Square, Plus, Brain, AudioLines } from 'lucide-react';
+import { Mic, Send, Square, Plus, Brain, AudioLines } from '../icons';
 import ChatModeSwitcher from './ChatModeSwitcher';
 import type { DisplayMode } from '../types';
 import AddButtonDropdown from './AddButtonDropdown';

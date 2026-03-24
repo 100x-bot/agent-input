@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { AgentInputProvider, AgentStatusBar } from '@100xbot/agent-input';
 import type { AgentStatus, AgentStatusBarRef } from '@100xbot/agent-input';
 import { createMockConfig } from './mockConfig';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from '../../src/icons';
 
 const mockConfig = createMockConfig();
 

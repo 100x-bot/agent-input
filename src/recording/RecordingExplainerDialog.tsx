@@ -1,6 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { MousePointer, Keyboard, Navigation } from 'lucide-react';
+import { MousePointer, Keyboard, Navigation } from '../icons';
 import ProcessingAnimation from './ProcessingAnimation';
 import RecordingIllustration from './RecordingIllustration';
 import RecordingAnimation from './RecordingAnimation';
@@ -126,32 +125,30 @@ const RecordingExplainerDialog: React.FC<RecordingExplainerDialogProps> = ({
                                     <div className="flex flex-col gap-2">
                                         <div className="flex items-start justify-between">
                                             <p className="text-sm font-medium text-[#0f172a]">Processing Workflow</p>
-                                            <motion.div
+                                            <div
                                                 key={processingState.step}
-                                                initial={{ opacity: 0, y: -5 }}
-                                                animate={{ opacity: 1, y: 0 }}
                                                 className="bg-[rgba(56,112,255,0.1)] px-2 py-1 rounded-full"
+                                                style={{ animation: 'ai-fade-in 0.3s ease-out' }}
                                             >
                                                 <span className="text-xs font-medium text-[#3870ff]">Step {processingState.step}/{processingState.totalSteps}</span>
-                                            </motion.div>
+                                            </div>
                                         </div>
-                                        <motion.div
+                                        <div
                                             key={`step-${processingState.step}`}
-                                            initial={{ opacity: 0, x: 20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ duration: 0.3 }}
                                             className="flex flex-col gap-1"
+                                            style={{ animation: 'ai-slide-in 0.3s ease-out' }}
                                         >
                                             <p className="text-sm font-semibold text-[#0f172a]">{currentStep.label}</p>
                                             <p className="text-xs text-[#64748b]">{currentStep.description}</p>
-                                        </motion.div>
+                                        </div>
                                         {/* Progress bar */}
                                         <div className="w-full bg-[#f1f5f9] h-1 rounded-full overflow-hidden">
-                                            <motion.div
+                                            <div
                                                 className="h-full bg-[#3870ff]"
-                                                initial={{ width: '0%' }}
-                                                animate={{ width: `${(processingState.step / processingState.totalSteps) * 100}%` }}
-                                                transition={{ duration: 0.5, ease: "easeOut" }}
+                                                style={{
+                                                    width: `${(processingState.step / processingState.totalSteps) * 100}%`,
+                                                    transition: 'width 0.5s ease-out',
+                                                }}
                                             />
                                         </div>
                                     </div>
@@ -167,6 +164,16 @@ const RecordingExplainerDialog: React.FC<RecordingExplainerDialogProps> = ({
                         </div>
                     </div>
                 </div>
+                <style>{`
+                    @keyframes ai-fade-in {
+                        from { opacity: 0; transform: translateY(-5px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    @keyframes ai-slide-in {
+                        from { opacity: 0; transform: translateX(20px); }
+                        to { opacity: 1; transform: translateX(0); }
+                    }
+                `}</style>
             </>
         );
     }
@@ -198,20 +205,18 @@ const RecordingExplainerDialog: React.FC<RecordingExplainerDialogProps> = ({
                         {/* Header - Fixed */}
                         <div className="shrink-0 flex items-center gap-4 p-[10px] border-b border-[#cbd5e1]">
                             <div className="flex-1 flex items-center gap-2">
-                                <motion.div
+                                <div
                                     className="relative w-6 h-6"
-                                    animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                                    style={{ animation: 'ai-dot-pulse 1.5s ease-in-out infinite' }}
                                 >
-                                    <motion.div
+                                    <div
                                         className="absolute inset-0 rounded-full bg-[#fef2f2]"
-                                        animate={{ opacity: [0.3, 0.6, 0.3] }}
-                                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                                        style={{ animation: 'ai-dot-pulse-opacity 1.5s ease-in-out infinite' }}
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <div className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
                                     </div>
-                                </motion.div>
+                                </div>
                                 <h2 className="text-lg font-semibold text-black">Recording in progress...</h2>
                             </div>
                             <button onClick={onClose} className="bg-[#f5f5f5] p-2 rounded-full hover:bg-[#e5e5e5] transition-colors">
@@ -246,33 +251,27 @@ const RecordingExplainerDialog: React.FC<RecordingExplainerDialogProps> = ({
                                         <p className="text-sm font-medium text-[#0f172a]">Recording your actions...</p>
                                         <div className="flex items-center gap-2">
                                             <div className="flex-1 flex items-center gap-3">
-                                                <motion.div
+                                                <div
                                                     className="flex items-center gap-1"
-                                                    key={`clicks-${recordingStats.clicks}`}
-                                                    animate={{ scale: [1, 1.15, 1] }}
-                                                    transition={{ duration: 0.3 }}
+                                                    style={{ animation: 'ai-bounce 0.3s ease-out' }}
                                                 >
                                                     <MousePointer className="w-4 h-4 text-[#334155]" />
                                                     <span className="text-xs font-medium text-[#334155]">Clicks</span>
-                                                </motion.div>
-                                                <motion.div
+                                                </div>
+                                                <div
                                                     className="flex items-center gap-1"
-                                                    key={`inputs-${recordingStats.inputs}`}
-                                                    animate={{ scale: [1, 1.15, 1] }}
-                                                    transition={{ duration: 0.3 }}
+                                                    style={{ animation: 'ai-bounce 0.3s ease-out' }}
                                                 >
                                                     <Keyboard className="w-4 h-4 text-[#334155]" />
                                                     <span className="text-xs font-medium text-[#334155]"> Input</span>
-                                                </motion.div>
-                                                <motion.div
+                                                </div>
+                                                <div
                                                     className="flex items-center gap-1"
-                                                    key={`nav-${recordingStats.navigations}`}
-                                                    animate={{ scale: [1, 1.15, 1] }}
-                                                    transition={{ duration: 0.3 }}
+                                                    style={{ animation: 'ai-bounce 0.3s ease-out' }}
                                                 >
                                                     <Navigation className="w-4 h-4 text-[#334155]" />
                                                     <span className="text-xs font-medium text-[#334155]"> Navigation</span>
-                                                </motion.div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -301,6 +300,21 @@ const RecordingExplainerDialog: React.FC<RecordingExplainerDialogProps> = ({
                         </div>
                     </div>
                 </div>
+                <style>{`
+                    @keyframes ai-dot-pulse {
+                        0%, 100% { transform: scale(1); }
+                        50% { transform: scale(1.2); }
+                    }
+                    @keyframes ai-dot-pulse-opacity {
+                        0%, 100% { opacity: 0.3; }
+                        50% { opacity: 0.6; }
+                    }
+                    @keyframes ai-bounce {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.15); }
+                        100% { transform: scale(1); }
+                    }
+                `}</style>
             </>
         );
     }

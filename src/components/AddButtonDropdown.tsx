@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus } from '../icons';
 import type { MentionSection } from '../types';
 import { useDropdownNavigation } from '../hooks/useDropdownNavigation';
 

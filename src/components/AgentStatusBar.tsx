@@ -1,6 +1,6 @@
 
 import React, { forwardRef, KeyboardEvent, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { ArrowDownToLine, X } from 'lucide-react';
+import { ArrowDownToLine, X } from '../icons';
 import { useAgentInput } from '../context/AgentInputProvider';
 import type { AgentStatus, DOMElementData, Reference, WorkflowData } from '../types';
 import RichInput, { RichInputRef } from './RichInput';
