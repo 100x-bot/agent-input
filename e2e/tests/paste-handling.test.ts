@@ -9,6 +9,7 @@ import {
   setCursorBeforeChip,
   setCursorOffset,
   pasteText,
+  pasteWithClipboard,
   selectAll,
   getInputText,
   getInputDisplayText,
@@ -156,5 +157,147 @@ describe('Paste handling', () => {
     const displayText = await getInputDisplayText(page);
     expect(displayText.length).toBeGreaterThan(0);
     expect(displayText).toContain('before');
+  });
+
+  describe('HTML paste (rich text from web pages)', () => {
+    it('should preserve paragraph breaks from HTML paste', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(
+        page,
+        'First paragraph Second paragraph Third paragraph',
+        '<p>First paragraph</p><p>Second paragraph</p><p>Third paragraph</p>'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toContain('First paragraph');
+      expect(inputText).toContain('Second paragraph');
+      expect(inputText).toContain('Third paragraph');
+      // Verify newlines exist between paragraphs
+      expect(inputText).toMatch(/First paragraph\n+Second paragraph/);
+      expect(inputText).toMatch(/Second paragraph\n+Third paragraph/);
+    });
+
+    it('should preserve line breaks from <br> tags', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(
+        page,
+        'line one line two line three',
+        'line one<br>line two<br>line three'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toMatch(/line one\nline two\nline three/);
+    });
+
+    it('should preserve list item breaks', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(
+        page,
+        'item one item two item three',
+        '<ul><li>item one</li><li>item two</li><li>item three</li></ul>'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toContain('item one');
+      expect(inputText).toContain('item two');
+      expect(inputText).toContain('item three');
+      // Each list item should be on its own line
+      expect(inputText).toMatch(/item one\n+item two/);
+      expect(inputText).toMatch(/item two\n+item three/);
+    });
+
+    it('should preserve div-based line breaks (Google Docs style)', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(
+        page,
+        'Block one Block two',
+        '<div>Block one</div><div>Block two</div>'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toMatch(/Block one\n+Block two/);
+    });
+
+    it('should preserve whitespace in <pre> blocks', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(
+        page,
+        'function foo() {\n  return 42;\n}',
+        '<pre>function foo() {\n  return 42;\n}</pre>'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toContain('function foo()');
+      expect(inputText).toContain('return 42');
+      expect(inputText).toMatch(/\n\s+return 42/);
+    });
+
+    it('should handle heading elements as block breaks', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(
+        page,
+        'Title Body text',
+        '<h1>Title</h1><p>Body text</p>'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toMatch(/Title\n+Body text/);
+    });
+
+    it('should collapse excessive newlines to at most two', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(
+        page,
+        'A\n\n\n\n\nB',
+        '<p>A</p><br><br><br><p>B</p>'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      // Should not have more than 2 consecutive newlines
+      expect(inputText).not.toMatch(/\n{3,}/);
+      expect(inputText).toContain('A');
+      expect(inputText).toContain('B');
+    });
+
+    it('should fall back to plain text when no HTML is provided', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(page, 'just plain text');
+      await waitForReact(page);
+
+      await expectDisplayText(page, 'just plain text', 'Plain text fallback should work');
+    });
+
+    it('should preserve newlines in plain text paste via clipboard event', async () => {
+      await focusInput(page);
+      await pasteWithClipboard(page, 'line1\nline2\nline3');
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toMatch(/line1\nline2\nline3/);
+    });
+
+    it('should paste HTML into middle of existing text', async () => {
+      await typeInInput(page, 'before after');
+      await setCursorOffset(page, 7);
+      await pasteWithClipboard(
+        page,
+        'para1 para2',
+        '<p>para1</p><p>para2</p>'
+      );
+      await waitForReact(page);
+
+      const inputText = await getInputText(page);
+      expect(inputText).toContain('before');
+      expect(inputText).toContain('para1');
+      expect(inputText).toContain('para2');
+      expect(inputText).toContain('after');
+    });
   });
 });

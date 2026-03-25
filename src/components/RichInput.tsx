@@ -612,6 +612,45 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
         }
     };
 
+    // Extract text from HTML clipboard data, converting block elements to newlines
+    const extractTextFromHTML = (html: string): string => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        const extract = (node: Node): string => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                return (node.textContent || '').replace(/[\r\n]+/g, ' ');
+            }
+            if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+            const el = node as HTMLElement;
+            const tag = el.tagName;
+
+            const isBlock = /^(P|DIV|BR|LI|H[1-6]|TR|BLOCKQUOTE|PRE|HR|DT|DD|FIGCAPTION|HEADER|FOOTER|SECTION|ARTICLE|OL|UL|TABLE|THEAD|TBODY|TFOOT)$/.test(tag);
+
+            if (tag === 'BR') return '\n';
+            if (tag === 'HR') return '\n---\n';
+
+            let inner = '';
+            for (let i = 0; i < node.childNodes.length; i++) {
+                inner += extract(node.childNodes[i]);
+            }
+
+            if (tag === 'PRE') {
+                inner = el.textContent || '';
+            }
+
+            if (isBlock && inner.length > 0) {
+                const prefix = inner.startsWith('\n') ? '' : '\n';
+                const suffix = inner.endsWith('\n') ? '' : '\n';
+                return prefix + inner + suffix;
+            }
+
+            return inner;
+        };
+
+        return extract(doc.body).replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
+    };
+
     const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
         // Check for files first
         if (onPaste && e.clipboardData?.files?.length > 0) {
@@ -619,18 +658,39 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
             return;
         }
 
-        // For text paste, get plain text
-        const text = e.clipboardData.getData('text/plain');
+        // Try HTML first for rich text (preserves paragraph structure from web pages),
+        // fall back to plain text
+        const html = e.clipboardData.getData('text/html');
+        const plain = e.clipboardData.getData('text/plain');
+        const text = html ? extractTextFromHTML(html) : plain;
+
         if (text) {
             e.preventDefault();
             const sel = window.getSelection();
             if (sel && sel.rangeCount > 0) {
                 const range = sel.getRangeAt(0);
                 range.deleteContents();
-                const textNode = document.createTextNode(text);
-                range.insertNode(textNode);
-                range.setStartAfter(textNode);
-                range.collapse(true);
+
+                // Split on newlines and insert text nodes + <br> elements
+                // (a single text node with \n doesn't render line breaks in contentEditable)
+                const lines = text.split('\n');
+                const fragment = document.createDocumentFragment();
+                lines.forEach((line, i) => {
+                    if (i > 0) {
+                        fragment.appendChild(document.createElement('br'));
+                    }
+                    if (line) {
+                        fragment.appendChild(document.createTextNode(line));
+                    }
+                });
+
+                const lastChild = fragment.lastChild;
+                range.insertNode(fragment);
+
+                if (lastChild) {
+                    range.setStartAfter(lastChild);
+                    range.collapse(true);
+                }
                 sel.removeAllRanges();
                 sel.addRange(range);
             }

@@ -410,7 +410,7 @@ export async function isInputFocused(page: Page): Promise<boolean> {
 }
 
 /**
- * Paste text into the focused element.
+ * Paste text into the focused element using execCommand (bypasses paste handler).
  */
 export async function pasteText(page: Page, text: string): Promise<void> {
   // For multiline text, insert line by line with <br> between
@@ -431,6 +431,31 @@ export async function pasteText(page: Page, text: string): Promise<void> {
       document.execCommand('insertText', false, text);
     }, text);
   }
+}
+
+/**
+ * Simulate a real paste event with clipboardData containing text/plain and optionally text/html.
+ * This triggers the actual onPaste handler in RichInput.
+ */
+export async function pasteWithClipboard(page: Page, plain: string, html?: string): Promise<void> {
+  await page.evaluate((sel, plainText, htmlText) => {
+    const input = document.querySelector(sel) as HTMLElement;
+    if (!input) return;
+
+    const clipboardData = new DataTransfer();
+    clipboardData.setData('text/plain', plainText);
+    if (htmlText) {
+      clipboardData.setData('text/html', htmlText);
+    }
+
+    const pasteEvent = new ClipboardEvent('paste', {
+      bubbles: true,
+      cancelable: true,
+      clipboardData,
+    });
+
+    input.dispatchEvent(pasteEvent);
+  }, SEL.input, plain, html || '');
 }
 
 /**
