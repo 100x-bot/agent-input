@@ -280,55 +280,55 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
             onKeyDown(e);
         }
 
-        // Handle backspace at DOM chip boundary
+        // Handle backspace at chip boundary
         if (e.key === 'Backspace' && !e.defaultPrevented) {
             const selection = window.getSelection();
-            if (selection && selection.rangeCount > 0) {
+            if (selection && selection.rangeCount > 0 && contentEditableRef.current) {
                 const range = selection.getRangeAt(0);
                 if (range.collapsed) {
-                    // Check if we're at the start of a text node
-                    if (range.startOffset === 0) {
-                        const container = range.startContainer;
-                        let prevElement: Element | null = null;
+                    const container = range.startContainer;
+                    let prevElement: Element | null = null;
 
-                        if (container.nodeType === Node.TEXT_NODE) {
-                            prevElement = (container.previousSibling as Element);
-                        } else if (container.nodeType === Node.ELEMENT_NODE) {
-                            const el = container as HTMLElement;
-                            if (range.startOffset > 0) {
-                                prevElement = el.childNodes[range.startOffset - 1] as Element;
-                            }
-                        }
+                    if (container.nodeType === Node.TEXT_NODE && range.startOffset === 0) {
+                        // Cursor at start of a text node — check previous sibling
+                        prevElement = (container.previousSibling as Element);
+                    } else if (container.nodeType === Node.ELEMENT_NODE && range.startOffset > 0) {
+                        // Cursor between child nodes of the container — check previous child
+                        prevElement = container.childNodes[range.startOffset - 1] as Element;
+                    }
 
-                        // If previous element is a chip, remove it
-                        if (prevElement && prevElement.hasAttribute?.('data-reference')) {
-                            e.preventDefault();
-                            const referenceRaw = prevElement.getAttribute('data-reference');
-                            if (referenceRaw) {
-                                // Check if it's a JSON DOM element
-                                try {
-                                    const jsonData = JSON.parse(referenceRaw);
-                                    if (jsonData.type === 'dom' && onRemoveDOMElement) {
-                                        onRemoveDOMElement(jsonData.selector);
-                                        // Remove the JSON from the text value
-                                        const newValue = value.replace(referenceRaw, '');
-                                        onChange(newValue);
-                                        return;
-                                    }
-                                } catch (err) {
-                                    // Not JSON, check old format
+                    // If previous element is a chip, remove it
+                    if (prevElement && prevElement.hasAttribute?.('data-reference')) {
+                        e.preventDefault();
+                        const referenceRaw = prevElement.getAttribute('data-reference');
+                        if (referenceRaw) {
+                            // Compute chip's text offset before removing it
+                            const parent = prevElement.parentNode!;
+                            const chipIndex = Array.from(parent.childNodes).indexOf(prevElement as ChildNode);
+                            const chipTextOffset = computeTextOffset(contentEditableRef.current, parent, chipIndex);
+
+                            // Position-aware removal
+                            const idx = value.indexOf(referenceRaw, Math.max(0, chipTextOffset - 1));
+                            const removeStart = idx >= 0 ? idx : value.indexOf(referenceRaw);
+                            const newValue = value.substring(0, removeStart) + value.substring(removeStart + referenceRaw.length);
+
+                            // Set cursor to where chip was
+                            pendingCursorOffsetRef.current = removeStart;
+
+                            // Notify DOM element removal if applicable
+                            try {
+                                const jsonData = JSON.parse(referenceRaw);
+                                if (jsonData.type === 'dom' && onRemoveDOMElement) {
+                                    onRemoveDOMElement(jsonData.selector);
                                 }
-
-                                // Extract selector for old @dom: format
+                            } catch {
                                 if (referenceRaw.startsWith('@dom:') && onRemoveDOMElement) {
-                                    const selector = referenceRaw.slice(5);
-                                    onRemoveDOMElement(selector);
-                                } else {
-                                    // For other reference types, just remove from text
-                                    const newValue = value.replace(referenceRaw, '');
-                                    onChange(newValue);
+                                    onRemoveDOMElement(referenceRaw.slice(5));
                                 }
                             }
+
+                            onChange(newValue);
+                            return;
                         }
                     }
                 }
