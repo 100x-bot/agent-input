@@ -209,6 +209,42 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
     const handleInput = () => {
         if (!contentEditableRef.current || isUpdatingRef.current || isComposingRef.current) return;
 
+        // Sanitize DOM: check if browser corrupted chip elements
+        // (e.g., text nodes moved inside chip spans, or chip inner structure modified)
+        const chips = contentEditableRef.current.querySelectorAll('[data-reference]');
+        let domCorrupted = false;
+        for (let i = 0; i < chips.length; i++) {
+            const chip = chips[i];
+            // Check if chip's contentEditable was lost (browser can strip it)
+            if (chip.getAttribute('contenteditable') !== 'false') {
+                domCorrupted = true;
+                break;
+            }
+            // Check if text nodes leaked into chip as direct children that shouldn't be there
+            // (chip should only have its inner span structure, not stray text)
+            const parent = chip.parentNode;
+            if (parent) {
+                const prevSib = chip.previousSibling;
+                const nextSib = chip.nextSibling;
+                // If a text node is immediately inside the chip element (not inside its inner spans),
+                // the browser has corrupted the DOM
+                for (let j = 0; j < chip.childNodes.length; j++) {
+                    const child = chip.childNodes[j];
+                    if (child.nodeType === Node.TEXT_NODE && (child.textContent || '').trim().length > 0) {
+                        // Text node directly inside chip wrapper = corruption
+                        domCorrupted = true;
+                        break;
+                    }
+                }
+                if (domCorrupted) break;
+            }
+        }
+
+        if (domCorrupted) {
+            // Force a full re-render to fix the DOM
+            forceRerenderRef.current = true;
+        }
+
         const newValue = extractTextContent(contentEditableRef.current);
 
         // Detect removed DOM references and notify parent
@@ -310,9 +346,17 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
                     if (container.nodeType === Node.TEXT_NODE && range.startOffset === 0) {
                         // Cursor at start of a text node — check previous sibling
                         prevElement = (container.previousSibling as Element);
+                        // Skip over <br> elements to find a chip
+                        if (prevElement && (prevElement as HTMLElement).tagName === 'BR') {
+                            prevElement = (prevElement.previousSibling as Element);
+                        }
                     } else if (container.nodeType === Node.ELEMENT_NODE && range.startOffset > 0) {
                         // Cursor between child nodes of the container — check previous child
                         prevElement = container.childNodes[range.startOffset - 1] as Element;
+                        // Skip over <br> elements to find a chip
+                        if (prevElement && (prevElement as HTMLElement).tagName === 'BR' && range.startOffset > 1) {
+                            prevElement = container.childNodes[range.startOffset - 2] as Element;
+                        }
                     }
 
                     // If previous element is a chip, remove it
@@ -346,6 +390,25 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
                             }
 
                             onChange(newValue, removeStart);
+                            return;
+                        }
+                    }
+
+                    // Prevent browser from corrupting DOM around chips:
+                    // When deleting the last character of a text node between two chips (or between
+                    // a chip and another non-editable element), the browser inserts a spurious <br>
+                    // and may corrupt chip DOM. Intercept and handle manually via the value string.
+                    if (container.nodeType === Node.TEXT_NODE && range.startOffset === 1 && (container.textContent || '').length === 1) {
+                        const prev = container.previousSibling;
+                        const next = container.nextSibling;
+                        const prevIsChip = prev && (prev as HTMLElement).hasAttribute?.('data-reference');
+                        const nextIsChip = next && (next as HTMLElement).hasAttribute?.('data-reference');
+                        if (prevIsChip || nextIsChip) {
+                            e.preventDefault();
+                            const cursorOffset = getCurrentCursorOffset();
+                            const newValue = value.substring(0, cursorOffset - 1) + value.substring(cursorOffset);
+                            pendingCursorOffsetRef.current = cursorOffset - 1;
+                            onChange(newValue, cursorOffset - 1);
                             return;
                         }
                     }

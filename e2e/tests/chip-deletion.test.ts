@@ -7,8 +7,11 @@ import {
   insertMentionChip,
   setCursorAfterChip,
   setCursorBeforeChip,
+  setCursorOffset,
   getChipCount,
   getChips,
+  getInputText,
+  getInputDisplayText,
   selectAll,
   getPageScrollTop,
   waitForReact,
@@ -174,6 +177,101 @@ describe('Chip Deletion', () => {
 
     // Assert cursor is at position 1 (after the "x")
     await expectCursorAt(page, 1, 'Cursor should be at position 1 after typing replacement character');
+  });
+
+  it('should not insert spurious line break when deleting all text between two chips', async () => {
+    // Build: text + chip1 + text + chip2 + text
+    await focusInput(page);
+    await typeInInput(page, 'aaa');
+    await insertMentionChip(page, 'file', 0);
+    await typeInInput(page, 'bbb');
+    await insertMentionChip(page, 'file', 1);
+    await typeInInput(page, 'ccc');
+    await waitForReact(page);
+
+    await expectChipCount(page, 2, 'Should have 2 chips');
+
+    // Place cursor right before chip2 (after "bbb")
+    await setCursorBeforeChip(page, 1);
+
+    // Backspace 3 times to delete "bbb"
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await waitForReact(page);
+
+    // Both chips should still exist
+    await expectChipCount(page, 2, 'Both chips should still exist after deleting text between them');
+
+    // Check no spurious newline in the value
+    const inputText = await getInputText(page);
+    expect(inputText).not.toContain('\n');
+
+    // Verify display is on a single line (no line break)
+    const displayText = await getInputDisplayText(page);
+    expect(displayText).toContain('aaa');
+    expect(displayText).toContain('ccc');
+  });
+
+  it('should delete chip correctly when backspacing through text into chip boundary', async () => {
+    // Build: text + chip1 + text + chip2 + text
+    await focusInput(page);
+    await typeInInput(page, 'aaa');
+    await insertMentionChip(page, 'file', 0);
+    await typeInInput(page, 'bb');
+    await insertMentionChip(page, 'file', 1);
+    await typeInInput(page, 'ccc');
+    await waitForReact(page);
+
+    await expectChipCount(page, 2, 'Should have 2 chips');
+
+    // Place cursor right before chip2 (after "bb")
+    await setCursorBeforeChip(page, 1);
+
+    // Backspace 2 times to delete "bb", then 1 more to hit chip1
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await waitForReact(page);
+
+    // Now backspace should delete chip1
+    await page.keyboard.press('Backspace');
+    await waitForReact(page);
+
+    await expectChipCount(page, 1, 'Should have 1 chip after deleting chip1');
+
+    // Remaining chip should be chip2 and text should be intact
+    const displayText = await getInputDisplayText(page);
+    expect(displayText).toContain('aaa');
+    expect(displayText).toContain('ccc');
+
+    // No spurious newlines
+    const inputText = await getInputText(page);
+    expect(inputText).not.toContain('\n');
+  });
+
+  it('should preserve chip integrity when deleting text adjacent to multiple chips', async () => {
+    // Build: chip1 + text + chip2 (no leading text)
+    await focusInput(page);
+    await insertMentionChip(page, 'file', 0);
+    await typeInInput(page, 'x');
+    await insertMentionChip(page, 'file', 1);
+    await waitForReact(page);
+
+    await expectChipCount(page, 2, 'Should have 2 chips');
+
+    // Place cursor after "x" (before chip2)
+    await setCursorBeforeChip(page, 1);
+
+    // Delete the single character "x"
+    await page.keyboard.press('Backspace');
+    await waitForReact(page);
+
+    // Both chips should still exist with no corruption
+    await expectChipCount(page, 2, 'Both chips should still exist after deleting single char between them');
+
+    // No spurious newlines
+    const inputText = await getInputText(page);
+    expect(inputText).not.toContain('\n');
   });
 
   it('should remove file chip when clicking its X (remove) button', async () => {
