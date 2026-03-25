@@ -513,9 +513,12 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                 setMentionFilter(afterAt);
                 setMentionCursorPos(lastAtIndex);
 
-                if (afterAt.startsWith('workflow:')) {
-                    const searchTerm = afterAt.replace('workflow:', '').trim();
-                    if (searchTerm) fetchWorkflows({ query: searchTerm, debounce: true });
+                if (afterAt.includes(':')) {
+                    const [prefix, ...rest] = afterAt.split(':');
+                    const searchTerm = rest.join(':').trim();
+                    if ('workflow'.startsWith(prefix) && searchTerm) {
+                        fetchWorkflows({ query: searchTerm, debounce: true });
+                    }
                 }
             } else {
                 setShowMentions(false);
