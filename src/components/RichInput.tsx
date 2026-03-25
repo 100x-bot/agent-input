@@ -5,7 +5,7 @@ import { getReferenceColorClasses, getReferenceIcon } from '../types';
 
 interface RichInputProps {
     value: string;
-    onChange: (value: string) => void;
+    onChange: (value: string, cursorOffset: number) => void;
     onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
     onFocus?: () => void;
     onBlur?: (e: React.FocusEvent) => void;
@@ -191,6 +191,20 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
         return refs;
     };
 
+    const getCurrentCursorOffset = (): number => {
+        const el = contentEditableRef.current;
+        if (!el) return lastCursorOffsetRef.current;
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return lastCursorOffsetRef.current;
+        try {
+            const range = selection.getRangeAt(0);
+            if (!el.contains(range.endContainer)) return lastCursorOffsetRef.current;
+            return computeTextOffset(el, range.endContainer, range.endOffset);
+        } catch {
+            return lastCursorOffsetRef.current;
+        }
+    };
+
     // Handle input changes
     const handleInput = () => {
         if (!contentEditableRef.current || isUpdatingRef.current || isComposingRef.current) return;
@@ -208,7 +222,7 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
             }
         }
 
-        onChange(newValue);
+        onChange(newValue, getCurrentCursorOffset());
     };
 
     // Check if cursor is at the very start of the input
@@ -258,6 +272,8 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
             if (isCursorAtStart() || (isNavigatingHistory && isCursorAtEnd())) {
                 const handled = onHistoryUp();
                 if (handled) {
+                    // Place cursor at end of newly loaded history item
+                    pendingCursorOffsetRef.current = Infinity;
                     e.preventDefault();
                     return;
                 }
@@ -269,6 +285,8 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
             if (isNavigatingHistory && isCursorAtEnd()) {
                 const handled = onHistoryDown();
                 if (handled) {
+                    // Place cursor at end of restored content
+                    pendingCursorOffsetRef.current = Infinity;
                     e.preventDefault();
                     return;
                 }
@@ -327,7 +345,7 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
                                 }
                             }
 
-                            onChange(newValue);
+                            onChange(newValue, removeStart);
                             return;
                         }
                     }
@@ -563,17 +581,7 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
             contentEditableRef.current?.blur();
         },
         getCursorOffset: () => {
-            const el = contentEditableRef.current;
-            if (!el) return lastCursorOffsetRef.current;
-            const selection = window.getSelection();
-            if (!selection || selection.rangeCount === 0) return lastCursorOffsetRef.current;
-            try {
-                const range = selection.getRangeAt(0);
-                if (!el.contains(range.endContainer)) return lastCursorOffsetRef.current;
-                return computeTextOffset(el, range.endContainer, range.endOffset);
-            } catch {
-                return lastCursorOffsetRef.current;
-            }
+            return getCurrentCursorOffset();
         }
     }));
 
@@ -694,8 +702,9 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
                 const referenceRaw = chipWrapper.getAttribute('data-reference');
                 if (referenceRaw) {
                     // Remove the reference from value
+                    const removeIdx = value.indexOf(referenceRaw);
                     const newValue = value.replace(referenceRaw, '');
-                    onChange(newValue);
+                    onChange(newValue, removeIdx >= 0 ? removeIdx : newValue.length);
 
                     // Focus back on input
                     setTimeout(() => {

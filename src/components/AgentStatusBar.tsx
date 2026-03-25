@@ -492,7 +492,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     ]);
 
     // Handle input
-    const handleInput = useCallback((value: string) => {
+    const handleInput = useCallback((value: string, cursorOffset: number) => {
         setMessage(value);
 
         setSelectedDropdownIndex(-1);
@@ -500,14 +500,17 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
 
         // Strip JSON objects before searching for @ to avoid matching @ inside references
         const textOnly = value.replace(/\{[^{}]*\}/g, m => ' '.repeat(m.length));
-        const lastAtIndex = textOnly.lastIndexOf('@');
+        // Search for @ before the cursor position, not at end of string
+        const cursorPos = cursorOffset >= 0 ? Math.min(cursorOffset, textOnly.length) : textOnly.length;
+        const lastAtIndex = textOnly.lastIndexOf('@', cursorPos - 1);
 
         if (value.startsWith('/')) {
             setShowMentions(true);
             setMentionFilter('/' + value.substring(1));
             setMentionCursorPos(0);
         } else if (lastAtIndex !== -1) {
-            const afterAt = textOnly.substring(lastAtIndex + 1);
+            // Only look at text between @ and cursor, not to end of string
+            const afterAt = textOnly.substring(lastAtIndex + 1, cursorPos);
             if (!afterAt.includes(' ') && !afterAt.includes('\n')) {
                 setShowMentions(true);
                 setMentionFilter(afterAt);

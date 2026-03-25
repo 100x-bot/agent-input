@@ -1,4 +1,4 @@
-.PHONY: build publish publish-patch publish-minor publish-major
+.PHONY: build publish publish-patch publish-minor publish-major test-e2e test-e2e-headed
 
 build:
 	npm run build
@@ -19,3 +19,9 @@ publish-major: build
 	git push --follow-tags
 
 publish: publish-patch
+
+test-e2e:
+	npx jest --config e2e/jest.config.cjs --runInBand
+
+test-e2e-headed:
+	HEADLESS=false npx jest --config e2e/jest.config.cjs --runInBand
