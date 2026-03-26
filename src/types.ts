@@ -169,9 +169,9 @@ export interface FlatMentionItem extends MentionItem {
 
 export interface MentionsDropdownRenderProps {
   sections: MentionSection[];
-  selectedIndex: number;
   onSelect: (mention: string) => void;
   flatItems: FlatMentionItem[];
+  registerKeyHandler: (handler: (props: { event: KeyboardEvent }) => boolean) => void;
 }
 
 // ─── Data Types ──────────────────────────────────────────────────────

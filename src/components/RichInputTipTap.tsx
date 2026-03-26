@@ -71,16 +71,28 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
 
     // If consumer provides renderMentionsDropdown, wrap it as a component for ReactRenderer
     const CustomDropdown = renderMentionsDropdown ? React.useMemo(() => {
-        return (props: any) => {
+        const Wrapper = (props: any) => {
+            const keyHandlerRef = React.useRef<((props: { event: KeyboardEvent }) => boolean) | null>(null);
+
+            React.useImperativeHandle(props.ref, () => ({
+                onKeyDown: (kbProps: { event: KeyboardEvent }) => {
+                    return keyHandlerRef.current?.(kbProps) ?? false;
+                },
+            }));
+
             const renderer = renderMentionsDropdownRef.current;
             if (!renderer) return null;
             return <>{renderer({
                 sections: props.sections || [],
-                selectedIndex: props.selectedIndex ?? -1,
                 onSelect: (mention: string) => props.command?.({ mention, displayText: mention }),
                 flatItems: props.items || [],
+                registerKeyHandler: (handler: (props: { event: KeyboardEvent }) => boolean) => {
+                    keyHandlerRef.current = handler;
+                },
             })}</>;
         };
+        Wrapper.displayName = 'CustomMentionDropdown';
+        return Wrapper;
     }, []) : undefined;
 
     const editor = useEditor({
