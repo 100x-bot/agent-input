@@ -7,8 +7,8 @@ export { default as AgentStatusBar } from './components/AgentStatusBar';
 export type { AgentStatusBarRef } from './components/AgentStatusBar';
 
 // Sub-components (tree-shakeable)
-export { default as RichInput } from './components/RichInput';
-export type { RichInputRef } from './components/RichInput';
+export { default as RichInput } from './components/RichInputTipTap';
+export type { RichInputRef } from './components/RichInputTipTap';
 export { default as ListeningNotification } from './components/ListeningNotification';
 export { default as ModelSelectorDropdown } from './components/ModelSelectorDropdown';
 export { default as AgentHeader } from './components/AgentHeader';

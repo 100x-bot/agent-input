@@ -3,12 +3,12 @@ import React, { forwardRef, KeyboardEvent, useCallback, useEffect, useImperative
 import { ArrowDownToLine, X } from '../icons';
 import { useAgentInput } from '../context/AgentInputProvider';
 import type { AgentStatus, DOMElementData, Reference, WorkflowData, MentionsDropdownRenderProps } from '../types';
-import RichInput, { RichInputRef } from './RichInput';
+import RichInput, { RichInputRef } from './RichInputTipTap';
 import ListeningNotification from './ListeningNotification';
 import AgentHeader from './AgentHeader';
-import MentionsDropdown from './MentionsDropdown';
 import InputToolbar from './InputToolbar';
 import { useInputHistory } from '../hooks/useInputHistory';
+import { mentionToChipAttrs } from '../utils/mentionUtils';
 
 
 type WorkflowWithCreator = WorkflowData & {
@@ -98,11 +98,6 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         }
     });
     const [isInputFocused, setIsInputFocused] = useState(false);
-    const [showMentions, setShowMentions] = useState(false);
-    const [mentionFilter, setMentionFilter] = useState('');
-    const [mentionCursorPos, setMentionCursorPos] = useState(0);
-    const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(-1);
-    const [filterText, setFilterText] = useState('');
     const [showAddDropdown, setShowAddDropdown] = useState(false);
     const [dismissedError, setDismissedError] = useState<string | null>(null);
 
@@ -116,7 +111,6 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
 
     // Refs
     const richInputRef = useRef<RichInputRef>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const domElementsRef = useRef<Map<string, DOMElementData | string>>(new Map());
@@ -146,7 +140,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     // Mention suggestions from provider
     const getMentionSuggestions = () => ctx.mentions.getSuggestions({
         message,
-        mentionFilter,
+        mentionFilter: '',
         messageHistory,
         tabs,
         files,
@@ -156,12 +150,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         searchFiles,
         isSearchingWorkflows: isSearching,
         getSlashCommandSuggestions,
-        filterText
+        filterText: ''
     });
-    const getAllMentionItems = () => {
-        const sections = getMentionSuggestions();
-        return ctx.mentions.getAllItems(sections);
-    };
 
     // Input history navigation (bash-style up/down arrow)
     const {
@@ -193,8 +183,6 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         onSendMessage(processedMessage, references);
 
         setMessage('');
-        setSelectedDropdownIndex(-1);
-        setFilterText('');
         resetInputHistory(); // Reset arrow key history navigation on submit
         domElementsRef.current.clear();
     }, [message, onSendMessage, availableWorkflows, saveToHistory, resetInputHistory]);
@@ -350,96 +338,21 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         }
     }, [isInputFocused]);
 
-    // Select mention
+    // Handle mention selection from + button dropdown
+    // (@ mentions are handled natively by TipTap's suggestion plugin inside RichInput)
     const selectMention = useCallback((mention: string) => {
         if (mention === '__UPLOAD_FILE__') {
-            if (showMentions) {
-                // Replacing typed @mention text
-                const beforeMention = message.substring(0, mentionCursorPos);
-                const afterMention = message.substring(mentionCursorPos + mentionFilter.length + 1);
-                setMessage(beforeMention + afterMention);
-            }
-            // When from + dropdown (showMentions=false), don't touch the message
             triggerFilePicker();
-            setShowMentions(false);
-            setMentionFilter('');
-            setSelectedDropdownIndex(-1);
             richInputRef.current?.focus();
             return;
         }
 
-        if (mention.startsWith('/')) {
-            setMessage(mention + ' ');
-            setShowMentions(false);
-            setMentionFilter('');
-            setSelectedDropdownIndex(-1);
-            richInputRef.current?.focus();
-            return;
-        }
+        const attrs = mentionToChipAttrs(mention, { tabs, searchFiles: (q) => searchFiles(q) });
+        richInputRef.current?.insertChip(attrs.id, attrs.referenceType, attrs.label, attrs.favIconUrl);
+    }, [tabs, searchFiles, triggerFilePicker]);
 
-        let actualMention = mention;
-
-        // Handle tab mentions
-        if (mention.startsWith('@tab:')) {
-            const tabId = mention.replace('@tab:', '').split(' - ')[0];
-            const tab = tabs.find(t => t.id?.toString() === tabId);
-            const tabTitle = tab?.title || `Tab ${tabId}`;
-            actualMention = JSON.stringify({
-                type: 'tab',
-                tabId,
-                tabTitle,
-                displayText: tabTitle,
-                favIconUrl: tab?.favIconUrl
-            });
-        } else if (mention.startsWith('@workflow:')) {
-            const parts = mention.split(' - ');
-            const workflowName = parts[0].replace('@workflow:', '');
-            const displayName = parts[1] || workflowName;
-            actualMention = JSON.stringify({
-                type: 'workflow',
-                workflowName,
-                displayText: displayName
-            });
-        } else if (mention.startsWith('@file:')) {
-            const parts = mention.split(' - ');
-            const fileKey = parts[0].replace('@file:', '');
-            const richDisplay = parts.slice(1).join(' - ');
-            const file = searchFiles('').find(f => f.key === fileKey);
-            actualMention = JSON.stringify({
-                type: 'file',
-                fileKey,
-                filename: file?.metadata?.filename || fileKey,
-                displayText: richDisplay,
-                metadata: file?.metadata,
-                mimeType: file?.mimeType || file?.type
-            });
-        } else {
-            actualMention = mention.includes(' - ') ? mention.split(' - ')[0] : mention;
-        }
-
-        let newMessage: string;
-        let cursorTarget: number;
-
-        if (showMentions) {
-            // Replacing typed @mention text
-            const beforeMention = message.substring(0, mentionCursorPos);
-            const afterCursor = message.substring(mentionCursorPos + mentionFilter.length + 1);
-            newMessage = beforeMention + actualMention + ' ' + afterCursor;
-            cursorTarget = beforeMention.length + actualMention.length + 1;
-        } else {
-            // Appending from + dropdown (no active mention to replace)
-            const trimmed = message.trimEnd();
-            newMessage = trimmed ? trimmed + ' ' + actualMention + ' ' : actualMention + ' ';
-            cursorTarget = newMessage.length;
-        }
-        setMessage(newMessage);
-        setShowMentions(false);
-        setMentionFilter('');
-        setSelectedDropdownIndex(-1);
-        richInputRef.current?.focus(cursorTarget);
-    }, [message, mentionCursorPos, mentionFilter, showMentions, tabs, searchFiles, triggerFilePicker]);
-
-    // Handle key down
+    // Handle key down — only submit and non-mention keyboard shortcuts
+    // (@ mention keyboard nav is handled by TipTap's suggestion plugin)
     const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Escape' && speechRecognition.autoSubmitCountdown > 0) {
             e.preventDefault();
@@ -448,106 +361,29 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
             return;
         }
 
-        if (e.key === 'Tab' && showMentions) {
-            e.preventDefault();
-            const mentions = getAllMentionItems();
-            const newIndex = e.shiftKey
-                ? (selectedDropdownIndex <= 0 ? mentions.length - 1 : selectedDropdownIndex - 1)
-                : (selectedDropdownIndex >= mentions.length - 1 ? 0 : selectedDropdownIndex + 1);
-            setSelectedDropdownIndex(newIndex);
-            return;
-        }
-
-        if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && showMentions && getMentionSuggestions().length > 0) {
-            e.preventDefault();
-            const mentions = getAllMentionItems();
-            const direction = e.key === 'ArrowDown' ? 1 : -1;
-            let newIndex = selectedDropdownIndex + direction;
-
-            if (newIndex < 0) newIndex = mentions.length - 1;
-            if (newIndex >= mentions.length) newIndex = 0;
-
-            setSelectedDropdownIndex(newIndex);
-            return;
-        }
-
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-
-            if (showMentions && selectedDropdownIndex >= 0) {
-                const mentions = getAllMentionItems();
-                if (mentions[selectedDropdownIndex]) {
-                    selectMention(mentions[selectedDropdownIndex].mention);
-                }
-            } else {
-                handleSubmitRef.current();
-            }
+            handleSubmitRef.current();
         } else if (e.key === 'Escape') {
-            if (showMentions) {
-                e.preventDefault();
-                setShowMentions(false);
-                setSelectedDropdownIndex(-1);
-            } else if (showAddDropdown) {
+            if (showAddDropdown) {
                 e.preventDefault();
                 setShowAddDropdown(false);
             }
         }
-    }, [
-        showMentions, selectedDropdownIndex, getAllMentionItems, selectMention,
-        speechRecognition, showAddDropdown
-    ]);
+    }, [speechRecognition, showAddDropdown]);
 
-    // Handle input
+    // Handle input — just sync message state
+    // (@ detection is handled by TipTap's suggestion plugin)
     const handleInput = useCallback((value: string, cursorOffset: number) => {
         setMessage(value);
-
-        setSelectedDropdownIndex(-1);
-        resetInputHistory(); // Reset arrow key history navigation when user types
-
-        // Strip JSON objects before searching for @ to avoid matching @ inside references
-        const textOnly = value.replace(/\{[^{}]*\}/g, m => ' '.repeat(m.length));
-        // Search for @ before the cursor position, not at end of string
-        const cursorPos = cursorOffset >= 0 ? Math.min(cursorOffset, textOnly.length) : textOnly.length;
-        const lastAtIndex = textOnly.lastIndexOf('@', cursorPos - 1);
-
-        if (value.startsWith('/')) {
-            setShowMentions(true);
-            setMentionFilter('/' + value.substring(1));
-            setMentionCursorPos(0);
-        } else if (lastAtIndex !== -1) {
-            // Only look at text between @ and cursor, not to end of string
-            const afterAt = textOnly.substring(lastAtIndex + 1, cursorPos);
-            if (!afterAt.includes(' ') && !afterAt.includes('\n')) {
-                setShowMentions(true);
-                setMentionFilter(afterAt);
-                setMentionCursorPos(lastAtIndex);
-
-                if (afterAt.includes(':')) {
-                    const [prefix, ...rest] = afterAt.split(':');
-                    const searchTerm = rest.join(':').trim();
-                    if ('workflow'.startsWith(prefix) && searchTerm) {
-                        fetchWorkflows({ query: searchTerm, debounce: true });
-                    }
-                }
-            } else {
-                setShowMentions(false);
-            }
-        } else {
-            setShowMentions(false);
-        }
-
-        setFilterText(value);
-    }, [resetInputHistory, fetchWorkflows]);
+        resetInputHistory();
+    }, [resetInputHistory]);
 
     const handleFocus = () => {
-        setFilterText(message);
         setIsInputFocused(true);
     };
 
     const handleBlur = (e: React.FocusEvent) => {
-        setShowMentions(false);
-        setMentionFilter('');
-        setSelectedDropdownIndex(-1);
         setIsInputFocused(false);
     };
 
@@ -692,36 +528,17 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                         onHistoryUp={handleHistoryUp}
                                                         onHistoryDown={handleHistoryDown}
                                                         isNavigatingHistory={isNavigatingInputHistory}
+                                                        mentionSections={mentionSections}
+                                                        onMentionSelect={selectMention}
+                                                        renderMentionsDropdown={renderMentionsDropdown}
                                                     />
-
-                                                    {/* Mentions Dropdown */}
-                                                    {showMentions && mentionSections.length > 0 && (
-                                                        renderMentionsDropdown
-                                                            ? renderMentionsDropdown({
-                                                                sections: mentionSections,
-                                                                selectedIndex: selectedDropdownIndex,
-                                                                onSelect: selectMention,
-                                                                flatItems: getAllMentionItems(),
-                                                            })
-                                                            : <MentionsDropdown
-                                                                ref={dropdownRef}
-                                                                sections={mentionSections}
-                                                                selectedIndex={selectedDropdownIndex}
-                                                                onSelect={selectMention}
-                                                            />
-                                                    )}
                                                 </div>
 
                                                 <InputToolbar
                                                     displayMode={displayMode}
                                                     onDisplayModeChange={setDisplayMode}
                                                     showAddDropdown={showAddDropdown}
-                                                    onAddDropdownToggle={(show) => {
-                                                        setShowAddDropdown(show);
-                                                        if (show) {
-                                                            setMentionFilter('');
-                                                        }
-                                                    }}
+                                                    onAddDropdownToggle={setShowAddDropdown}
                                                     mentionSections={mentionSections}
                                                     onMentionSelect={selectMention}
                                                     showModelDialog={showModelDialog}
