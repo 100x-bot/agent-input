@@ -180,11 +180,17 @@ export async function setCursorOffset(page: Page, targetOffset: number): Promise
           const el = child as HTMLElement;
           if (el.hasAttribute('data-reference')) {
             const refLen = (el.getAttribute('data-reference') || '').length;
+            if (remaining === 0) {
+              return { node: parent, offset: i };
+            }
             if (remaining <= refLen) {
               return { node: parent, offset: i + 1 };
             }
             remaining -= refLen;
           } else if (el.tagName === 'BR') {
+            if (remaining === 0) {
+              return { node: parent, offset: i };
+            }
             if (remaining <= 1) {
               return { node: parent, offset: i + 1 };
             }

@@ -194,6 +194,28 @@ export function parseReferences(
     }
   }
 
+  // FreeTextJsonParser strips whitespace at JSON boundaries (spaces, newlines).
+  // Reconstruct any dropped characters by matching segments against the original text.
+  const reconstructed = segments.map(s => s.type === 'reference' && s.reference ? s.reference.raw : s.content || '').join('');
+  if (reconstructed !== text && reconstructed.length < text.length) {
+    const fixedSegments: ContentSegment[] = [];
+    let pos = 0;
+    for (const seg of segments) {
+      const segContent = seg.type === 'reference' && seg.reference ? seg.reference.raw : seg.content || '';
+      const idx = text.indexOf(segContent, pos);
+      if (idx > pos) {
+        // Gap found — add missing text
+        fixedSegments.push({ type: 'text', content: text.substring(pos, idx) });
+      }
+      fixedSegments.push(seg);
+      pos = (idx >= 0 ? idx : pos) + segContent.length;
+    }
+    if (pos < text.length) {
+      fixedSegments.push({ type: 'text', content: text.substring(pos) });
+    }
+    return { references, segments: fixedSegments };
+  }
+
   return { references, segments };
 }
 

@@ -435,12 +435,19 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
                     const el = child as HTMLElement;
                     if (el.hasAttribute('data-reference')) {
                         const refLen = (el.getAttribute('data-reference') || '').length;
+                        if (remaining === 0) {
+                            // Place cursor before this chip
+                            return { node: parent, offset: i };
+                        }
                         if (remaining <= refLen) {
                             // Place cursor after this chip
                             return { node: parent, offset: i + 1 };
                         }
                         remaining -= refLen;
                     } else if (el.tagName === 'BR') {
+                        if (remaining === 0) {
+                            return { node: parent, offset: i };
+                        }
                         if (remaining <= 1) {
                             return { node: parent, offset: i + 1 };
                         }
@@ -577,8 +584,8 @@ const RichInput = forwardRef<RichInputRef, RichInputProps>(({
 
                 try {
                     const range = document.createRange();
-                    if (targetOffset >= value.length) {
-                        // At or past end, stay at end
+                    if (targetOffset > value.length) {
+                        // Past end, stay at end
                         range.selectNodeContents(contentEditableRef.current);
                         range.collapse(false);
                     } else {

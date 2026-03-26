@@ -417,20 +417,26 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
             actualMention = mention.includes(' - ') ? mention.split(' - ')[0] : mention;
         }
 
+        let newMessage: string;
+        let cursorTarget: number;
+
         if (showMentions) {
             // Replacing typed @mention text
             const beforeMention = message.substring(0, mentionCursorPos);
             const afterCursor = message.substring(mentionCursorPos + mentionFilter.length + 1);
-            setMessage(beforeMention + actualMention + ' ' + afterCursor);
+            newMessage = beforeMention + actualMention + ' ' + afterCursor;
+            cursorTarget = beforeMention.length + actualMention.length + 1;
         } else {
             // Appending from + dropdown (no active mention to replace)
             const trimmed = message.trimEnd();
-            setMessage(trimmed ? trimmed + ' ' + actualMention + ' ' : actualMention + ' ');
+            newMessage = trimmed ? trimmed + ' ' + actualMention + ' ' : actualMention + ' ';
+            cursorTarget = newMessage.length;
         }
+        setMessage(newMessage);
         setShowMentions(false);
         setMentionFilter('');
         setSelectedDropdownIndex(-1);
-        richInputRef.current?.focus();
+        richInputRef.current?.focus(cursorTarget);
     }, [message, mentionCursorPos, mentionFilter, showMentions, tabs, searchFiles, triggerFilePicker]);
 
     // Handle key down
