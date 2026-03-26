@@ -72,6 +72,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     initialValue,
     autoScrollEnabled = true,
     onAutoScrollToggle,
+    onStartCommand,
     activeWorkflowMode,
     renderMentionsDropdown
 }, ref) => {
