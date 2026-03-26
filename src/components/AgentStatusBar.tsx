@@ -255,11 +255,11 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         return () => port.onMessage.removeListener(handleAltClickElement);
     }, [port]);
 
-    // Handle click outside
+    // Handle click outside — close add dropdown
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setSelectedDropdownIndex(-1);
+                setShowAddDropdown(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
