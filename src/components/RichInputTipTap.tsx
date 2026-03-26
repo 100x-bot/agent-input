@@ -7,6 +7,7 @@ import HardBreak from '@tiptap/extension-hard-break';
 import History from '@tiptap/extension-history';
 import { useAgentInput } from '../context/AgentInputProvider';
 import { ChipMention } from '../extensions/ChipMention';
+import { SlashCommand } from '../extensions/SlashCommand';
 import { createSuggestion } from '../extensions/suggestion';
 import { segmentsToTipTapDoc, tipTapDocToString, computeCursorOffset } from '../utils/tiptapSerializer';
 import type { MentionSection, MentionsDropdownRenderProps } from '../types';
@@ -30,6 +31,8 @@ interface RichInputProps {
     mentionSections?: MentionSection[];
     onMentionSelect?: (mention: string) => void;
     renderMentionsDropdown?: (props: MentionsDropdownRenderProps) => React.ReactNode;
+    slashCommandSections?: MentionSection[];
+    onSlashCommandSelect?: (command: string) => void;
 }
 
 export interface RichInputRef {
@@ -58,6 +61,8 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
     mentionSections = [],
     onMentionSelect,
     renderMentionsDropdown,
+    slashCommandSections = [],
+    onSlashCommandSelect,
 }, ref) => {
     const { parseReferences } = useAgentInput();
     const isUpdatingRef = useRef(false);
@@ -66,6 +71,8 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
     // Keep mentionSections in a ref so TipTap's suggestion plugin can access latest data
     const mentionSectionsRef = useRef(mentionSections);
     mentionSectionsRef.current = mentionSections;
+    const slashCommandSectionsRef = useRef(slashCommandSections);
+    slashCommandSectionsRef.current = slashCommandSections;
     const renderMentionsDropdownRef = useRef(renderMentionsDropdown);
     renderMentionsDropdownRef.current = renderMentionsDropdown;
 
@@ -108,6 +115,17 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
                     getSections: () => mentionSectionsRef.current,
                     onSelect: onMentionSelect,
                     renderDropdown: CustomDropdown,
+                }),
+            }),
+            SlashCommand.configure({
+                suggestion: createSuggestion({
+                    getSections: () => slashCommandSectionsRef.current,
+                    onSelect: onSlashCommandSelect,
+                    onCommand: ({ editor, range, item }) => {
+                        editor.chain().focus()
+                            .insertContentAt(range, item.mention + ' ')
+                            .run();
+                    },
                 }),
             }),
         ],

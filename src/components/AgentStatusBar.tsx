@@ -153,6 +153,22 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         filterText: ''
     });
 
+    // Slash command suggestions (mentionFilter starting with '/' tells the host to include commands)
+    const getSlashCommandSections = () => ctx.mentions.getSuggestions({
+        message,
+        mentionFilter: '/',
+        messageHistory,
+        tabs,
+        files,
+        workflows: workflows as WorkflowData[],
+        availableWorkflows,
+        searchTabs,
+        searchFiles,
+        isSearchingWorkflows: isSearching,
+        getSlashCommandSuggestions,
+        filterText: ''
+    });
+
     // Input history navigation (bash-style up/down arrow)
     const {
         navigateUp: historyNavigateUp,
@@ -422,6 +438,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     };
 
     const mentionSections = getMentionSuggestions();
+    const slashCommandSections = getSlashCommandSections();
 
     return (
         <div ref={scrollContainerRef} className="pb-1 flex flex-col z-10 overflow-visible"
@@ -518,7 +535,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                                 op.includes('workflow') || op.includes('creating') || op.includes('generating code')
                                                             );
                                                             if (isWf) return 'ask for changes';
-                                                            return placeholder || 'Type @ for adding tabs or workflows';
+                                                            return placeholder || 'Type @ for mentions, / for commands';
                                                         })()}
                                                         placeholderClassName="text-[0.875rem] leading-[1.25rem]"
                                                         className="w-full bg-transparent border-0 focus:outline-none text-[0.875rem] overflow-y-auto theme-transition leading-[1.25rem] min-h-[1.5rem] max-h-[12rem]"
@@ -531,6 +548,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                         mentionSections={mentionSections}
                                                         onMentionSelect={selectMention}
                                                         renderMentionsDropdown={renderMentionsDropdown}
+                                                        slashCommandSections={slashCommandSections}
+                                                        onSlashCommandSelect={onStartCommand}
                                                     />
                                                 </div>
 

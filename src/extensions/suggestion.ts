@@ -10,6 +10,8 @@ export interface SuggestionConfig {
     onSelect?: (mention: string) => void;
     /** Custom dropdown component — if provided, used instead of default MentionList */
     renderDropdown?: React.ComponentType<any>;
+    /** Override how a selected item is inserted. Default: insert as mention chip. */
+    onCommand?: (params: { editor: any; range: any; item: FlatMentionItem }) => void;
 }
 
 /**
@@ -102,17 +104,21 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
 
         command: ({ editor, range, props }: { editor: any; range: any; props: any }) => {
             const item = props as FlatMentionItem;
-            // Use mentionToChipAttrs for JSON conversion, but override label
-            // with the item's displayText which is already correct
-            const attrs = mentionToChipAttrs(item.mention);
-            attrs.label = item.displayText || attrs.label;
 
-            editor.chain().focus()
-                .insertContentAt(range, [
-                    { type: 'mention', attrs },
-                    { type: 'text', text: ' ' },
-                ])
-                .run();
+            if (config.onCommand) {
+                config.onCommand({ editor, range, item });
+            } else {
+                // Default: insert as mention chip
+                const attrs = mentionToChipAttrs(item.mention);
+                attrs.label = item.displayText || attrs.label;
+
+                editor.chain().focus()
+                    .insertContentAt(range, [
+                        { type: 'mention', attrs },
+                        { type: 'text', text: ' ' },
+                    ])
+                    .run();
+            }
         },
     };
 }
