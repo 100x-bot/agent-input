@@ -72,10 +72,10 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
     // If consumer provides renderMentionsDropdown, wrap it as a component for ReactRenderer
     const CustomDropdown = renderMentionsDropdown ? React.useMemo(() => {
         const Wrapper = (props: any) => {
-            const keyHandlerRef = React.useRef<((props: { event: KeyboardEvent }) => boolean) | null>(null);
+            const keyHandlerRef = React.useRef<((props: { event: globalThis.KeyboardEvent }) => boolean) | null>(null);
 
             React.useImperativeHandle(props.ref, () => ({
-                onKeyDown: (kbProps: { event: KeyboardEvent }) => {
+                onKeyDown: (kbProps: { event: globalThis.KeyboardEvent }) => {
                     return keyHandlerRef.current?.(kbProps) ?? false;
                 },
             }));
@@ -86,7 +86,7 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
                 sections: props.sections || [],
                 onSelect: (mention: string) => props.command?.({ mention, displayText: mention }),
                 flatItems: props.items || [],
-                registerKeyHandler: (handler: (props: { event: KeyboardEvent }) => boolean) => {
+                registerKeyHandler: (handler: (props: { event: globalThis.KeyboardEvent }) => boolean) => {
                     keyHandlerRef.current = handler;
                 },
             })}</>;
