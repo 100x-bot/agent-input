@@ -65,21 +65,30 @@ export async function getInputText(page: Page): Promise<string> {
     const input = document.querySelector(sel) as HTMLElement;
     if (!input) return '';
 
-    let text = '';
-    for (let i = 0; i < input.childNodes.length; i++) {
-      const node = input.childNodes[i];
+    function walk(node: Node): string {
       if (node.nodeType === Node.TEXT_NODE) {
-        text += node.textContent || '';
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        return node.textContent || '';
+      }
+      if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as HTMLElement;
         if (el.hasAttribute('data-reference')) {
-          text += el.getAttribute('data-reference') || '';
-        } else if (el.tagName === 'BR') {
-          text += '\n';
-        } else {
-          text += el.textContent || '';
+          return el.getAttribute('data-reference') || '';
         }
+        if (el.tagName === 'BR') {
+          return '\n';
+        }
+        let result = '';
+        for (const child of Array.from(el.childNodes)) {
+          result += walk(child);
+        }
+        return result;
       }
+      return '';
+    }
+
+    let text = '';
+    for (const child of Array.from(input.childNodes)) {
+      text += walk(child);
     }
     return text;
   }, SEL.input);
@@ -280,6 +289,26 @@ export async function insertMentionChip(
   type: 'tab' | 'file' | 'workflow',
   index: number = 0
 ): Promise<string> {
+  // TipTap's suggestion plugin requires @ to be preceded by a space or start-of-line.
+  // Ensure a space before @ so the trigger fires reliably after any preceding text.
+  const needsSpace = await page.evaluate((sel) => {
+    const input = document.querySelector(sel) as HTMLElement;
+    if (!input) return false;
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return false;
+    const range = selection.getRangeAt(0);
+    const container = range.startContainer;
+    if (container.nodeType === Node.TEXT_NODE) {
+      const text = container.textContent || '';
+      const offset = range.startOffset;
+      return offset > 0 && text[offset - 1] !== ' ';
+    }
+    return false;
+  }, SEL.input);
+
+  if (needsSpace) {
+    await page.keyboard.type(' ', { delay: 20 });
+  }
   await page.keyboard.type('@', { delay: 20 });
 
   // Wait for mentions dropdown

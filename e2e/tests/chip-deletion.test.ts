@@ -228,12 +228,16 @@ describe('Chip Deletion', () => {
     // Place cursor right before chip2 (after "bb")
     await setCursorBeforeChip(page, 1);
 
-    // Backspace 2 times to delete "bb", then 1 more to hit chip1
+    // Backspace 3 times to delete " bb" (space auto-inserted before @trigger + "bb"),
+    // then 1 more backspace to also delete the trailing space from chip1 insertion,
+    // then 1 more to hit chip1
+    await page.keyboard.press('Backspace');
     await page.keyboard.press('Backspace');
     await page.keyboard.press('Backspace');
     await waitForReact(page);
 
-    // Now backspace should delete chip1
+    // Now backspace through the space after chip1 and then delete chip1
+    await page.keyboard.press('Backspace');
     await page.keyboard.press('Backspace');
     await waitForReact(page);
 

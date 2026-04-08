@@ -56,7 +56,7 @@ export const ChipMention = Mention.extend({
     },
 
     addNodeView() {
-        return ({ node }) => {
+        return ({ node, editor, getPos }) => {
             const dom = document.createElement('span');
             dom.setAttribute('data-type', 'mention');
             dom.setAttribute('data-reference', node.attrs.id || '');
@@ -73,6 +73,18 @@ export const ChipMention = Mention.extend({
                 displayText,
                 favIconUrl,
             });
+
+            const removeBtn = dom.querySelector('[data-remove="true"]');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const pos = getPos();
+                    if (typeof pos === 'number') {
+                        editor.commands.deleteRange({ from: pos, to: pos + node.nodeSize });
+                    }
+                });
+            }
 
             return { dom };
         };
