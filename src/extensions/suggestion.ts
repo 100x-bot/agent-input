@@ -54,12 +54,13 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
 
                     if (!props.clientRect) return;
 
-                    // Position the dropdown
+                    // Position the dropdown — use editor left edge so it stays visible
                     const rect = props.clientRect();
+                    const editorRect = props.editor.view.dom.getBoundingClientRect();
                     if (rect && component.element) {
                         component.element.style.position = 'fixed';
                         component.element.style.zIndex = '50';
-                        component.element.style.left = `${rect.left}px`;
+                        component.element.style.left = `${editorRect.left}px`;
                         component.element.style.bottom = `${window.innerHeight - rect.top + 4}px`;
                     }
 
@@ -76,8 +77,9 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
                     if (!props.clientRect || !component?.element) return;
 
                     const rect = props.clientRect();
+                    const editorRect = props.editor.view.dom.getBoundingClientRect();
                     if (rect) {
-                        component.element.style.left = `${rect.left}px`;
+                        component.element.style.left = `${editorRect.left}px`;
                         component.element.style.bottom = `${window.innerHeight - rect.top + 4}px`;
                     }
                 },
