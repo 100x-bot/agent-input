@@ -38,6 +38,8 @@ interface AgentStatusBarProps {
     isLoadingHistory?: boolean;
     historyItems?: string[];
     onStartCommand?: (command: string) => void;
+    /** CSS min-height for the input area (default: "6rem" / 96px) */
+    inputMinHeight?: string;
     initialValue: string;
     autoScrollEnabled?: boolean;
     onAutoScrollToggle?: (enabled: boolean) => void;
@@ -73,6 +75,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     autoScrollEnabled = true,
     onAutoScrollToggle,
     onStartCommand,
+    inputMinHeight = '6rem',
     activeWorkflowMode,
     renderMentionsDropdown
 }, ref) => {
@@ -540,7 +543,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                         })()}
                                                         placeholderClassName="text-[0.875rem] leading-[1.25rem]"
                                                         className="w-full bg-transparent border-0 focus:outline-none text-[0.875rem] overflow-y-auto theme-transition leading-[1.25rem] min-h-[1.5rem] max-h-[12rem]"
-                                                        style={{ color: 'var(--ai-text-primary)', minHeight: "3rem", maxHeight: "12rem", fieldSizing: "content" } as React.CSSProperties}
+                                                        style={{ color: 'var(--ai-text-primary)', minHeight: inputMinHeight, maxHeight: "12rem", fieldSizing: "content" } as React.CSSProperties}
                                                         domElementsMap={domElementsRef.current}
                                                         onRemoveDOMElement={removeDOMElement}
                                                         onHistoryUp={handleHistoryUp}
