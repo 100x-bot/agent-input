@@ -42,7 +42,7 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
                     component = new ReactRenderer(DropdownComponent, {
                         props: {
                             ...props,
-                            sections: filterSections(config.getSections(props.query), props.query),
+                            sections: config.getSections(props.query),
                             onMentionSelect: config.onSelect,
                         },
                         editor: props.editor,
@@ -66,7 +66,7 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
                 onUpdate: (props: SuggestionProps) => {
                     component?.updateProps({
                         ...props,
-                        sections: filterSections(config.getSections(props.query), props.query),
+                        sections: config.getSections(props.query),
                         onMentionSelect: config.onSelect,
                     });
 
@@ -120,18 +120,4 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
             }
         },
     };
-}
-
-function filterSections(sections: MentionSection[], query: string): MentionSection[] {
-    if (!query) return sections;
-    const q = query.toLowerCase();
-    return sections
-        .map(s => ({
-            ...s,
-            items: s.items.filter(i =>
-                i.displayText.toLowerCase().includes(q) ||
-                i.mention.toLowerCase().includes(q)
-            ),
-        }))
-        .filter(s => s.items.length > 0);
 }
