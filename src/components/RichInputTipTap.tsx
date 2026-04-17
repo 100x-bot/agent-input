@@ -33,7 +33,7 @@ interface RichInputProps {
     renderMentionsDropdown?: (props: MentionsDropdownRenderProps) => React.ReactNode;
     slashCommandSections?: MentionSection[];
     onSlashCommandSelect?: (command: string) => void;
-    onMentionQueryChange?: (query: string) => void;
+    onMentionQueryChange?: (query: string) => MentionSection[];
 }
 
 export interface RichInputRef {
@@ -77,6 +77,8 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
     slashCommandSectionsRef.current = slashCommandSections;
     const renderMentionsDropdownRef = useRef(renderMentionsDropdown);
     renderMentionsDropdownRef.current = renderMentionsDropdown;
+    const onMentionQueryChangeRef = useRef(onMentionQueryChange);
+    onMentionQueryChangeRef.current = onMentionQueryChange;
 
     // If consumer provides renderMentionsDropdown, wrap it as a component for ReactRenderer
     const CustomDropdown = renderMentionsDropdown ? React.useMemo(() => {
@@ -114,15 +116,17 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
             ChipMention.configure({
                 deleteTriggerWithBackspace: true,
                 suggestion: createSuggestion({
-                    getSections: () => mentionSectionsRef.current,
+                    getSections: (query) => {
+                        if (onMentionQueryChangeRef.current) return onMentionQueryChangeRef.current(query);
+                        return mentionSectionsRef.current;
+                    },
                     onSelect: onMentionSelect,
                     renderDropdown: CustomDropdown,
-                    onQueryChange: onMentionQueryChange,
                 }),
             }),
             SlashCommand.configure({
                 suggestion: createSuggestion({
-                    getSections: () => slashCommandSectionsRef.current,
+                    getSections: (_query) => slashCommandSectionsRef.current,
                     onSelect: onSlashCommandSelect,
                     onCommand: ({ editor, range, item }) => {
                         editor.chain().focus()

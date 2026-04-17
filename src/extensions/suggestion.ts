@@ -6,14 +6,12 @@ import type { MentionSection, FlatMentionItem } from '../types';
 import { mentionToChipAttrs } from '../utils/mentionUtils';
 
 export interface SuggestionConfig {
-    getSections: () => MentionSection[];
+    getSections: (query: string) => MentionSection[];
     onSelect?: (mention: string) => void;
     /** Custom dropdown component — if provided, used instead of default MentionList */
     renderDropdown?: React.ComponentType<any>;
     /** Override how a selected item is inserted. Default: insert as mention chip. */
     onCommand?: (params: { editor: any; range: any; item: FlatMentionItem }) => void;
-    /** Called when the suggestion query changes (on open and each keystroke) */
-    onQueryChange?: (query: string) => void;
 }
 
 /**
@@ -24,16 +22,12 @@ export interface SuggestionConfig {
 export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptions, 'editor'> {
     return {
         items: ({ query }: { query: string }) => {
-            const sections = config.getSections();
-            const q = query.toLowerCase();
-
-            // Flatten sections to items, filtered by query
+            const sections = config.getSections(query);
+            // Flatten sections to items — getSections already filters by query
             const flat: FlatMentionItem[] = [];
             for (const section of sections) {
                 for (const item of section.items) {
-                    if (!q || item.displayText.toLowerCase().includes(q) || item.mention.toLowerCase().includes(q)) {
-                        flat.push({ ...item, sectionLabel: section.label });
-                    }
+                    flat.push({ ...item, sectionLabel: section.label });
                 }
             }
             return flat;
@@ -44,12 +38,11 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
 
             return {
                 onStart: (props: SuggestionProps) => {
-                    config.onQueryChange?.(props.query);
                     const DropdownComponent = config.renderDropdown || MentionList;
                     component = new ReactRenderer(DropdownComponent, {
                         props: {
                             ...props,
-                            sections: filterSections(config.getSections(), props.query),
+                            sections: filterSections(config.getSections(props.query), props.query),
                             onMentionSelect: config.onSelect,
                         },
                         editor: props.editor,
@@ -71,10 +64,9 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
                 },
 
                 onUpdate: (props: SuggestionProps) => {
-                    config.onQueryChange?.(props.query);
                     component?.updateProps({
                         ...props,
-                        sections: filterSections(config.getSections(), props.query),
+                        sections: filterSections(config.getSections(props.query), props.query),
                         onMentionSelect: config.onSelect,
                     });
 
@@ -101,7 +93,7 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
                 },
 
                 onExit: () => {
-                    config.onQueryChange?.('');
+                    config.getSections('');
                     component?.element?.remove();
                     component?.destroy();
                     component = null;

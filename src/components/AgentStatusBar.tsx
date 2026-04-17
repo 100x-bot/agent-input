@@ -115,8 +115,6 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const [hasLoadedWorkflows, setHasLoadedWorkflows] = useState(false);
     const isWorkflowLoadingRef = useRef(false);
 
-    // Current mention query from TipTap suggestion plugin
-    const [mentionQuery, setMentionQuery] = useState('');
 
     // Refs
     const richInputRef = useRef<RichInputRef>(null);
@@ -147,9 +145,9 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const setSelectedModel = ctx.model?.setSelectedId ?? (() => {});
 
     // Mention suggestions from provider
-    const getMentionSuggestions = () => ctx.mentions.getSuggestions({
+    const getMentionSuggestions = (query = '') => ctx.mentions.getSuggestions({
         message,
-        mentionFilter: mentionQuery,
+        mentionFilter: query,
         messageHistory,
         tabs,
         files,
@@ -159,7 +157,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         searchFiles,
         isSearchingWorkflows: isSearching,
         getSlashCommandSuggestions,
-        filterText: mentionQuery
+        filterText: query
     });
 
     // Slash command suggestions (mentionFilter starting with '/' tells the host to include commands)
@@ -363,15 +361,15 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         }
     }, [isInputFocused]);
 
-    // Handle mention query changes from TipTap suggestion plugin
-    const handleMentionQueryChange = useCallback((query: string) => {
-        setMentionQuery(query);
+    // Handle mention query changes from TipTap suggestion plugin — returns fresh sections synchronously
+    const handleMentionQueryChange = (query: string) => {
         const match = query.match(WORKFLOW_PREFIX_RE);
         if (match) {
             const searchTerm = match[1] ?? '';
             fetchWorkflows({ query: searchTerm, debounce: true });
         }
-    }, [fetchWorkflows]);
+        return getMentionSuggestions(query);
+    };
 
     // Handle mention selection from + button dropdown
     // (@ mentions are handled natively by TipTap's suggestion plugin inside RichInput)
