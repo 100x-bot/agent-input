@@ -125,7 +125,7 @@ export function createMockConfig(): AgentInputConfig {
       items: mockWorkflows,
       isLoading: false,
       isSearching: false,
-      fetch: async () => {},
+      fetch: async (params) => { console.log('[Demo] fetchWorkflows:', params); },
     },
 
     history: {

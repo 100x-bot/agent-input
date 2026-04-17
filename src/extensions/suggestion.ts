@@ -12,6 +12,8 @@ export interface SuggestionConfig {
     renderDropdown?: React.ComponentType<any>;
     /** Override how a selected item is inserted. Default: insert as mention chip. */
     onCommand?: (params: { editor: any; range: any; item: FlatMentionItem }) => void;
+    /** Called when the suggestion query changes (on open and each keystroke) */
+    onQueryChange?: (query: string) => void;
 }
 
 /**
@@ -42,6 +44,7 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
 
             return {
                 onStart: (props: SuggestionProps) => {
+                    config.onQueryChange?.(props.query);
                     const DropdownComponent = config.renderDropdown || MentionList;
                     component = new ReactRenderer(DropdownComponent, {
                         props: {
@@ -68,6 +71,7 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
                 },
 
                 onUpdate: (props: SuggestionProps) => {
+                    config.onQueryChange?.(props.query);
                     component?.updateProps({
                         ...props,
                         sections: filterSections(config.getSections(), props.query),
@@ -97,6 +101,7 @@ export function createSuggestion(config: SuggestionConfig): Omit<SuggestionOptio
                 },
 
                 onExit: () => {
+                    config.onQueryChange?.('');
                     component?.element?.remove();
                     component?.destroy();
                     component = null;

@@ -33,6 +33,7 @@ interface RichInputProps {
     renderMentionsDropdown?: (props: MentionsDropdownRenderProps) => React.ReactNode;
     slashCommandSections?: MentionSection[];
     onSlashCommandSelect?: (command: string) => void;
+    onMentionQueryChange?: (query: string) => void;
 }
 
 export interface RichInputRef {
@@ -63,6 +64,7 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
     renderMentionsDropdown,
     slashCommandSections = [],
     onSlashCommandSelect,
+    onMentionQueryChange,
 }, ref) => {
     const { parseReferences } = useAgentInput();
     const isUpdatingRef = useRef(false);
@@ -115,6 +117,7 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
                     getSections: () => mentionSectionsRef.current,
                     onSelect: onMentionSelect,
                     renderDropdown: CustomDropdown,
+                    onQueryChange: onMentionQueryChange,
                 }),
             }),
             SlashCommand.configure({
