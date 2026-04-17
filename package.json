@@ -29,6 +29,7 @@
     "dist"
   ],
   "scripts": {
+    "prepublishOnly": "npm run build",
     "build": "tsup && npx @tailwindcss/cli -i src/styles.build.css -o dist/styles.css --minify",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
