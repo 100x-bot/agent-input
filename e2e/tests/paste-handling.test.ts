@@ -66,6 +66,31 @@ describe('Paste handling', () => {
     await expectCursorAt(page, 8, 'Cursor should be at end of replacement text');
   });
 
+  it('should submit the visible pasted replacement when clicked immediately', async () => {
+    const historySaves: string[] = [];
+    page.on('console', msg => {
+      const text = msg.text();
+      const prefix = '[Demo] History saved: ';
+      if (text.startsWith(prefix)) historySaves.push(text.slice(prefix.length));
+    });
+
+    await typeInInput(page, 'old typed state');
+    await page.waitForSelector('[aria-label="Send message"]', { timeout: 5000 });
+    await selectAll(page);
+
+    await page.evaluate(() => {
+      document.execCommand('insertText', false, 'fresh pasted text');
+      const sendButton = document.querySelector('[aria-label="Send message"]') as HTMLButtonElement | null;
+      sendButton?.click();
+    });
+
+    for (let i = 0; i < 20 && historySaves.length === 0; i++) {
+      await waitForReact(page);
+    }
+
+    expect(historySaves[0]).toBe('fresh pasted text');
+  });
+
   it('should paste right before a chip', async () => {
     await typeInInput(page, 'before');
     const chipText = await insertMentionChip(page, 'file', 0);

@@ -194,7 +194,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const handleSubmit = useCallback((manualMessage?: string) => {
         if (!onSendMessage) return;
 
-        let processedMessage = manualMessage?.trim?.() || message.trim();
+        let processedMessage = manualMessage?.trim?.() || richInputRef.current?.getValue().trim() || message.trim();
         if (!processedMessage || processedMessage === '__CANCEL_CONVERSATION__') return;
 
         const references = extractReferences(processedMessage, {
@@ -247,7 +247,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     useImperativeHandle(ref, () => ({
         focus: (cursorOffset?: number) => richInputRef.current?.focus(cursorOffset),
         setValue: (value: string) => setMessage(value),
-        getValue: () => message,
+        getValue: () => richInputRef.current?.getValue() ?? message,
         getCursorOffset: () => richInputRef.current?.getCursorOffset() ?? -1,
         toggleSpeechRecognition: () => speechRecognition.toggleListening(),
         cancelSpeech: () => speechSynthesis.cancel()

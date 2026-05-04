@@ -39,6 +39,7 @@ interface RichInputProps {
 export interface RichInputRef {
     focus: (cursorOffset?: number) => void;
     blur: () => void;
+    getValue: () => string;
     getCursorOffset: () => number;
     insertChip: (raw: string, referenceType: string, displayText: string, favIconUrl?: string | null) => void;
 }
@@ -262,6 +263,10 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
             }
         },
         blur: () => { editor?.commands.blur(); },
+        getValue: () => {
+            if (!editor) return lastValueRef.current;
+            return tipTapDOMToString(editor.view.dom as HTMLElement);
+        },
         getCursorOffset: () => {
             if (!editor) return 0;
             return computeCursorOffset(editor.getJSON(), editor.state.selection.anchor);
@@ -309,6 +314,34 @@ function extractTextFromHTML(html: string): string {
         return inner;
     };
     return extract(doc.body).replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
+}
+
+function tipTapDOMToString(root: HTMLElement): string {
+    const readNode = (node: Node): string => {
+        if (node.nodeType === Node.TEXT_NODE) return node.textContent || '';
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+        const el = node as HTMLElement;
+        if (el.hasAttribute('data-reference')) {
+            return el.getAttribute('data-reference') || '';
+        }
+        if (el.tagName === 'BR') {
+            return el.classList.contains('ProseMirror-trailingBreak') ? '' : '\n';
+        }
+
+        let text = '';
+        for (const child of Array.from(el.childNodes)) {
+            text += readNode(child);
+        }
+        return text;
+    };
+
+    let text = '';
+    for (const child of Array.from(root.childNodes)) {
+        if (text) text += '\n';
+        text += readNode(child);
+    }
+    return text;
 }
 
 RichInputTipTap.displayName = 'RichInput';
