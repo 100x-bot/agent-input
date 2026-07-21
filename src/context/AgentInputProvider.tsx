@@ -93,6 +93,8 @@ export interface AgentInputConfig {
   // Model selection (optional)
   model?: {
     selectedId: string;
+    /** User-facing name for the active model. Falls back to selectedId when omitted. */
+    selectedName?: string;
     showDialog: boolean;
     setShowDialog: (show: boolean) => void;
     loadSelectedModel: () => void;

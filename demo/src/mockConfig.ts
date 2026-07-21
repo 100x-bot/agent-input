@@ -2,6 +2,12 @@ import type { AgentInputConfig } from '@100xbot/agent-input';
 import type { TabData, FileData, WorkflowData, MentionSection, FlatMentionItem } from '@100xbot/agent-input';
 import React from 'react';
 
+export const mockModels = [
+  { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic' },
+  { id: 'gpt-5', name: 'GPT-5', provider: 'openai' },
+  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'google' },
+];
+
 const mockTabs: TabData[] = [
   { id: 1, title: 'GitHub - 100x-bot/agent-input', url: 'https://github.com/100x-bot/agent-input', favIconUrl: 'https://github.com/favicon.ico' },
   { id: 2, title: 'React Documentation', url: 'https://react.dev', favIconUrl: 'https://react.dev/favicon.ico' },
@@ -35,6 +41,12 @@ export function createMockConfig(): AgentInputConfig {
   return {
     sendMessage: async (message: any) => {
       console.log('[Demo] sendMessage:', message);
+      if (message.method === 'fetchAvailableModels') {
+        return { success: true, data: mockModels };
+      }
+      if (message.method === 'getSelectedModelId') {
+        return { success: true, data: mockModels[0].id };
+      }
       return { success: true, response: 'Mock response from agent' };
     },
 

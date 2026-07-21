@@ -39,7 +39,7 @@ const ReadyDot = ({ color }: { color: string }) => (
 
 const AgentHeader: React.FC<AgentHeaderProps> = ({
     status,
-    modelName = "Claude Haiku 4.5",
+    modelName = "Select model",
     onCancel,
     activeWorkflowMode,
 }) => {

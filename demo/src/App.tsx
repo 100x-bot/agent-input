@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { AgentInputProvider, AgentStatusBar } from '@100xbot/agent-input';
 import type { AgentStatus, AgentStatusBarRef } from '@100xbot/agent-input';
-import { createMockConfig } from './mockConfig';
+import { createMockConfig, mockModels } from './mockConfig';
 import { useSpeechRecognition } from './useSpeechRecognition';
 import { Moon, Sun } from '../../src/icons';
 
@@ -378,16 +378,26 @@ export default function App() {
   const speechRecognition = useSpeechRecognition();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
+  const [selectedModelId, setSelectedModelId] = useState(mockModels[0].id);
+  const [showModelDialog, setShowModelDialog] = useState(false);
 
   const status = presetStates[activePreset];
 
   const mockConfig = useMemo(() => ({
     ...baseMockConfig,
+    model: {
+      selectedId: selectedModelId,
+      selectedName: mockModels.find(model => model.id === selectedModelId)?.name ?? selectedModelId,
+      showDialog: showModelDialog,
+      setShowDialog: setShowModelDialog,
+      loadSelectedModel: () => {},
+      setSelectedId: setSelectedModelId,
+    },
     speech: {
       recognition: speechRecognition,
       synthesis: { cancel: () => {} },
     },
-  }), [speechRecognition]);
+  }), [selectedModelId, showModelDialog, speechRecognition]);
 
   const toggleCategory = (id: string) => {
     setExpandedCategories(prev => {

@@ -144,7 +144,7 @@ interface AgentInputConfig {
   tabs?: { items: TabData[]; search: (q: string) => TabData[] };
   workflows?: { items: WorkflowData[]; isLoading: boolean; isSearching: boolean; fetch: (...) => Promise<void> };
   history?: { items: string[]; save: (msg: string) => void };
-  model?: { selectedId: string; showDialog: boolean; setShowDialog: ...; loadSelectedModel: ...; setSelectedId: ... };
+  model?: { selectedId: string; selectedName?: string; showDialog: boolean; setShowDialog: ...; loadSelectedModel: ...; setSelectedId: ... };
   conversation?: { addMessage: (message: any) => void };
   viewMode?: { displayMode: 'chat' | 'log'; setDisplayMode: (mode) => void };
   auth?: { authState: any };

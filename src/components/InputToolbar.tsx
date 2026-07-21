@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, Send, Square, Plus, Brain, AudioLines } from '../icons';
+import { Mic, Send, Square, Plus, ChevronDown, AudioLines } from '../icons';
 import ChatModeSwitcher from './ChatModeSwitcher';
 import type { DisplayMode } from '../types';
 import AddButtonDropdown from './AddButtonDropdown';
@@ -21,6 +21,7 @@ export interface InputToolbarProps {
     showModelDialog: boolean;
     onModelDialogToggle: (show: boolean) => void;
     selectedModel: string;
+    selectedModelName?: string;
     onModelSelect: (modelId: string) => void;
     loadSelectedModel: () => void;
 
@@ -47,6 +48,7 @@ const InputToolbar: React.FC<InputToolbarProps> = ({
     showModelDialog,
     onModelDialogToggle,
     selectedModel,
+    selectedModelName,
     onModelSelect,
     loadSelectedModel,
     speechState,
@@ -59,6 +61,7 @@ const InputToolbar: React.FC<InputToolbarProps> = ({
     const isWorking = status.state === "working";
     const hasMessage = message.trim().length > 0;
     const canSubmit = isWorking ? (status.canCancel && onCancel) : hasMessage;
+    const modelLabel = selectedModelName || selectedModel || 'Select model';
 
     return (
         <div className="flex items-center justify-between">
@@ -75,12 +78,14 @@ const InputToolbar: React.FC<InputToolbarProps> = ({
                 {/* Model selection button */}
                 <div className="relative group">
                     <button
-                        className={TOOLBAR_BTN}
+                        className="rounded-[0.5rem] h-[2rem] min-w-[2rem] max-w-[11rem] px-[0.5rem] flex items-center gap-[0.25rem] cursor-pointer transition-colors"
                         style={{ border: '1px solid var(--ai-border-default)', backgroundColor: 'var(--ai-surface-primary)', color: 'var(--ai-text-secondary)' }}
                         onClick={() => onModelDialogToggle(true)}
                         aria-label="Select a model"
+                        title={modelLabel}
                     >
-                        <Brain className="w-[1rem] h-[1rem]" strokeWidth={1.5} />
+                        <span className="min-w-0 truncate text-[0.75rem] font-[500]">{modelLabel}</span>
+                        <ChevronDown className="w-[0.875rem] h-[0.875rem] shrink-0" strokeWidth={1.5} aria-hidden="true" />
                     </button>
                     <ModelSelectorDropdown
                         isOpen={showModelDialog}

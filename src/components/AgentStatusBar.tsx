@@ -139,6 +139,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
 
     // Model selection from provider
     const selectedModel = ctx.model?.selectedId ?? '';
+    const selectedModelName = ctx.model?.selectedName || selectedModel || 'Select model';
     const showModelDialog = ctx.model?.showDialog ?? false;
     const setShowModelDialog = ctx.model?.setShowDialog ?? (() => {});
     const loadSelectedModel = ctx.model?.loadSelectedModel ?? (() => {});
@@ -497,7 +498,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                     <div className={isWorkflowActive ? '' : 'px-[0.5rem] rounded-t-[0.75rem]'}>
                                         <AgentHeader
                                             status={status}
-                                            modelName={selectedModel ? selectedModel.replace('claude-', 'Claude ').replace(/-/g, ' ').replace(/\d{8}$/, '').trim() : 'Claude Haiku 4.5'}
+                                            modelName={selectedModelName}
                                             activeWorkflowMode={activeWorkflowMode}
                                         />
                                     </div>
@@ -581,6 +582,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                     showModelDialog={showModelDialog}
                                                     onModelDialogToggle={setShowModelDialog}
                                                     selectedModel={selectedModel}
+                                                    selectedModelName={selectedModelName}
                                                     onModelSelect={setSelectedModel}
                                                     loadSelectedModel={loadSelectedModel}
                                                     speechState={speechRecognition.state as 'idle' | 'listening' | 'processing'}
