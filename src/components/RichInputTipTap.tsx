@@ -8,7 +8,12 @@ import History from '@tiptap/extension-history';
 import { useAgentInput } from '../context/AgentInputProvider';
 import { ChipMention } from '../extensions/ChipMention';
 import { SlashCommand } from '../extensions/SlashCommand';
-import { createSuggestion } from '../extensions/suggestion';
+import { exitSuggestion } from '@tiptap/suggestion';
+import {
+    createSuggestion,
+    mentionSuggestionPluginKey,
+    slashSuggestionPluginKey,
+} from '../extensions/suggestion';
 import { segmentsToTipTapDoc, tipTapDocToString, computeCursorOffset } from '../utils/tiptapSerializer';
 import type { MentionSection, MentionsDropdownRenderProps } from '../types';
 
@@ -39,6 +44,7 @@ interface RichInputProps {
 export interface RichInputRef {
     focus: (cursorOffset?: number) => void;
     blur: () => void;
+    dismissSuggestions: () => void;
     getValue: () => string;
     getCursorOffset: () => number;
     insertChip: (raw: string, referenceType: string, displayText: string, favIconUrl?: string | null) => void;
@@ -70,6 +76,15 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
     const { parseReferences } = useAgentInput();
     const isUpdatingRef = useRef(false);
     const lastValueRef = useRef(value);
+    const suggestionsDismissedRef = useRef(false);
+
+    const shouldShowSuggestion = ({ transaction }: { transaction: { docChanged: boolean } }) => {
+        if (!suggestionsDismissedRef.current) return true;
+        if (!transaction.docChanged) return false;
+
+        suggestionsDismissedRef.current = false;
+        return true;
+    };
 
     // Keep mentionSections in a ref so TipTap's suggestion plugin can access latest data
     const mentionSectionsRef = useRef(mentionSections);
@@ -117,6 +132,8 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
             ChipMention.configure({
                 deleteTriggerWithBackspace: true,
                 suggestion: createSuggestion({
+                    pluginKey: mentionSuggestionPluginKey,
+                    shouldShow: shouldShowSuggestion,
                     getSections: (query) => {
                         if (onMentionQueryChangeRef.current) return onMentionQueryChangeRef.current(query);
                         return mentionSectionsRef.current;
@@ -127,6 +144,8 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
             }),
             SlashCommand.configure({
                 suggestion: createSuggestion({
+                    pluginKey: slashSuggestionPluginKey,
+                    shouldShow: shouldShowSuggestion,
                     getSections: (_query) => slashCommandSectionsRef.current,
                     onSelect: onSlashCommandSelect,
                     onCommand: ({ editor, range, item }) => {
@@ -263,6 +282,15 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
             }
         },
         blur: () => { editor?.commands.blur(); },
+        dismissSuggestions: () => {
+            if (!editor) return;
+            const activePluginKey = [mentionSuggestionPluginKey, slashSuggestionPluginKey]
+                .find(pluginKey => pluginKey.getState(editor.state)?.active);
+            if (activePluginKey) {
+                suggestionsDismissedRef.current = true;
+                exitSuggestion(editor.view, activePluginKey);
+            }
+        },
         getValue: () => {
             if (!editor) return lastValueRef.current;
             return tipTapDOMToString(editor.view.dom as HTMLElement);

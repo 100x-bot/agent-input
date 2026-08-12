@@ -179,9 +179,16 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
   return (
     <>
       {/* Backdrop for outside click */}
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div
+        className="fixed inset-0"
+        style={{ zIndex: 'var(--ai-layer-exclusive-popover-backdrop, 60)' }}
+        onClick={onClose}
+      />
 
-      <div className="absolute bottom-full left-1/2 -translate-x-[20%] mb-2 z-50 w-[280px]">
+      <div
+        className="absolute bottom-full left-1/2 -translate-x-[20%] mb-2 w-[280px]"
+        style={{ zIndex: 'var(--ai-layer-exclusive-popover, 70)' }}
+      >
         <div
           ref={containerRef}
           tabIndex={-1}

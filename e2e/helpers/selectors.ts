@@ -5,6 +5,8 @@ export const SEL = {
   mentionsDropdown: '[role="listbox"][aria-label="Suggestions"]',
   mentionOption: '[role="option"]',
   addButton: '[aria-label="Add a tab, workflow or file"]',
+  modelButton: '[aria-label="Select a model"]',
+  modelDropdown: '[role="listbox"][aria-label="Select model"]',
   sendButton: '[aria-label="Send message"]',
   stateRadio: (name: string) => `[role="radio"][aria-checked]`,
 } as const;

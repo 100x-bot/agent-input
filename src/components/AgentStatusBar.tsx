@@ -145,6 +145,18 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const loadSelectedModel = ctx.model?.loadSelectedModel ?? (() => {});
     const setSelectedModel = ctx.model?.setSelectedId ?? (() => {});
 
+    const handleModelDialogToggle = useCallback((show: boolean) => {
+        if (show) {
+            richInputRef.current?.dismissSuggestions();
+            setShowAddDropdown(false);
+            setShowModelDialog(true);
+            return;
+        }
+
+        setShowModelDialog(false);
+        requestAnimationFrame(() => richInputRef.current?.focus());
+    }, [setShowModelDialog]);
+
     // Mention suggestions from provider
     const getMentionSuggestions = (query = '') => ctx.mentions.getSuggestions({
         message,
@@ -580,7 +592,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                     mentionSections={mentionSections}
                                                     onMentionSelect={selectMention}
                                                     showModelDialog={showModelDialog}
-                                                    onModelDialogToggle={setShowModelDialog}
+                                                    onModelDialogToggle={handleModelDialogToggle}
                                                     selectedModel={selectedModel}
                                                     selectedModelName={selectedModelName}
                                                     onModelSelect={setSelectedModel}

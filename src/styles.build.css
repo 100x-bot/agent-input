@@ -59,6 +59,11 @@
   --ai-shadow-dropdown: 0 2px 8px 1px rgba(0, 0, 0, 0.10);
   --ai-shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 
+  /* Layer scale: transient suggestions < exclusive popover backdrop < exclusive popover */
+  --ai-layer-suggestion: 50;
+  --ai-layer-exclusive-popover-backdrop: 60;
+  --ai-layer-exclusive-popover: 70;
+
   /* Reference chip colors */
   --ai-ref-dom-bg: #E3E6F2;
   --ai-ref-file-bg: #DEE8E5;
