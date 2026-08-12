@@ -13,6 +13,7 @@ import {
     createSuggestion,
     mentionSuggestionPluginKey,
     slashSuggestionPluginKey,
+    type SuggestionRendererController,
 } from '../extensions/suggestion';
 import { segmentsToTipTapDoc, tipTapDocToString, computeCursorOffset } from '../utils/tiptapSerializer';
 import type { MentionSection, MentionsDropdownRenderProps } from '../types';
@@ -77,6 +78,7 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
     const isUpdatingRef = useRef(false);
     const lastValueRef = useRef(value);
     const suggestionsDismissedRef = useRef(false);
+    const mentionSuggestionControllerRef = useRef<SuggestionRendererController | null>(null);
 
     const shouldShowSuggestion = ({ transaction }: { transaction: { docChanged: boolean } }) => {
         if (!suggestionsDismissedRef.current) return true;
@@ -133,6 +135,7 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
                 deleteTriggerWithBackspace: true,
                 suggestion: createSuggestion({
                     pluginKey: mentionSuggestionPluginKey,
+                    controllerRef: mentionSuggestionControllerRef,
                     shouldShow: shouldShowSuggestion,
                     getSections: (query) => {
                         if (onMentionQueryChangeRef.current) return onMentionQueryChangeRef.current(query);
@@ -257,6 +260,13 @@ const RichInputTipTap = forwardRef<RichInputRef, RichInputProps>(({
         onFocus: () => { onFocus?.(); },
         onBlur: ({ event }) => { onBlur?.(event as unknown as React.FocusEvent); },
     });
+
+    // React-side suggestion data can change without an editor transaction
+    // (for example, after an async workflow search resolves). Refresh only the
+    // mention renderer; the controller ignores unchanged section payloads.
+    useEffect(() => {
+        mentionSuggestionControllerRef.current?.refresh();
+    }, [mentionSections]);
 
     // Sync value prop → editor content
     useEffect(() => {

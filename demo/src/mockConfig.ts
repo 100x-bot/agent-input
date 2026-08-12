@@ -20,7 +20,7 @@ const mockFiles: FileData[] = [
   { key: 'file-3', metadata: { filename: 'data.csv', size: 54000, mimeType: 'text/csv' } },
 ];
 
-const mockWorkflows: WorkflowData[] = [
+export const mockWorkflows: WorkflowData[] = [
   { name: 'Summarize Page', description: 'Extract key points from the current page' },
   { name: 'Generate Tests', description: 'Create unit tests for selected code' },
   { name: 'Translate Content', description: 'Translate page content to another language' },
@@ -51,7 +51,7 @@ export function createMockConfig(): AgentInputConfig {
     },
 
     mentions: {
-      getSuggestions: ({ mentionFilter }) => {
+      getSuggestions: ({ mentionFilter, workflows, isSearchingWorkflows }) => {
         const sections: MentionSection[] = [];
         const filteredTabs = filterByQuery(mockTabs, mentionFilter);
         if (filteredTabs.length > 0) {
@@ -78,7 +78,8 @@ export function createMockConfig(): AgentInputConfig {
             })),
           });
         }
-        const filteredWorkflows = filterByQuery(mockWorkflows, mentionFilter);
+        const workflowFilter = mentionFilter.replace(/^(?:w|wo|workflow):/i, '');
+        const filteredWorkflows = filterByQuery(workflows, workflowFilter);
         if (filteredWorkflows.length > 0) {
           sections.push({
             type: 'workflows',
@@ -88,6 +89,12 @@ export function createMockConfig(): AgentInputConfig {
               displayText: w.name,
               icon: '🔧',
             })),
+          });
+        } else if (isSearchingWorkflows && /^(?:w|wo|workflow):/i.test(mentionFilter)) {
+          sections.push({
+            type: 'workflows',
+            label: 'Workflows',
+            items: [{ mention: '__SEARCHING_WORKFLOWS__', displayText: 'Searching...', icon: '🔧' }],
           });
         }
         return sections;

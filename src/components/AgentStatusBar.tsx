@@ -114,6 +114,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     // Workflow loading state
     const [hasLoadedWorkflows, setHasLoadedWorkflows] = useState(false);
     const isWorkflowLoadingRef = useRef(false);
+    const lastWorkflowSearchQueryRef = useRef<string | null>(null);
 
 
     // Refs
@@ -379,7 +380,12 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         const match = query.match(WORKFLOW_PREFIX_RE);
         if (match) {
             const searchTerm = match[1] ?? '';
-            fetchWorkflows({ query: searchTerm, debounce: true });
+            if (lastWorkflowSearchQueryRef.current !== searchTerm) {
+                lastWorkflowSearchQueryRef.current = searchTerm;
+                fetchWorkflows({ query: searchTerm, debounce: true });
+            }
+        } else {
+            lastWorkflowSearchQueryRef.current = null;
         }
         return getMentionSuggestions(query);
     };

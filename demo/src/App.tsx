@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { AgentInputProvider, AgentStatusBar } from '@100xbot/agent-input';
 import type { AgentStatus, AgentStatusBarRef } from '@100xbot/agent-input';
-import { createMockConfig, mockModels } from './mockConfig';
+import { createMockConfig, mockModels, mockWorkflows } from './mockConfig';
 import { useSpeechRecognition } from './useSpeechRecognition';
 import { Moon, Sun } from '../../src/icons';
 
@@ -380,6 +380,24 @@ export default function App() {
   const [filter, setFilter] = useState('');
   const [selectedModelId, setSelectedModelId] = useState(mockModels[0].id);
   const [showModelDialog, setShowModelDialog] = useState(false);
+  const [workflowItems, setWorkflowItems] = useState(mockWorkflows);
+  const [isSearchingWorkflows, setIsSearchingWorkflows] = useState(false);
+  const workflowSearchRequestRef = useRef(0);
+
+  const fetchMockWorkflows = useCallback(async (params?: { query?: string }) => {
+    if (params?.query === undefined) return;
+
+    const requestId = ++workflowSearchRequestRef.current;
+    setIsSearchingWorkflows(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    if (requestId !== workflowSearchRequestRef.current) return;
+
+    const query = params.query.trim().toLowerCase();
+    setWorkflowItems(query === 'dashboard'
+      ? [...mockWorkflows, { name: 'Dashboard Audit', description: 'Audit dashboard data and layout' }]
+      : mockWorkflows);
+    setIsSearchingWorkflows(false);
+  }, []);
 
   const status = presetStates[activePreset];
 
@@ -393,11 +411,17 @@ export default function App() {
       loadSelectedModel: () => {},
       setSelectedId: setSelectedModelId,
     },
+    workflows: {
+      items: workflowItems,
+      isLoading: false,
+      isSearching: isSearchingWorkflows,
+      fetch: fetchMockWorkflows,
+    },
     speech: {
       recognition: speechRecognition,
       synthesis: { cancel: () => {} },
     },
-  }), [selectedModelId, showModelDialog, speechRecognition]);
+  }), [selectedModelId, showModelDialog, speechRecognition, workflowItems, isSearchingWorkflows, fetchMockWorkflows]);
 
   const toggleCategory = (id: string) => {
     setExpandedCategories(prev => {
