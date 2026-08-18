@@ -2,7 +2,7 @@
 import React, { forwardRef, KeyboardEvent, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ArrowDownToLine, X } from '../icons';
 import { useAgentInput } from '../context/AgentInputProvider';
-import type { AgentStatus, DOMElementData, Reference, WorkflowData, MentionsDropdownRenderProps } from '../types';
+import type { AgentStatus, AgentInputInteractionEvent, AgentInputInteractionSource, DOMElementData, Reference, WorkflowData, MentionsDropdownRenderProps } from '../types';
 import RichInput, { RichInputRef } from './RichInputTipTap';
 import ListeningNotification from './ListeningNotification';
 import AgentHeader from './AgentHeader';
@@ -20,7 +20,7 @@ type WorkflowWithCreator = WorkflowData & {
     };
 };
 
-interface AgentStatusBarProps {
+export interface AgentStatusBarProps {
     status: AgentStatus;
     sessionId: string;
     onCancel?: () => void;
@@ -47,6 +47,8 @@ interface AgentStatusBarProps {
     activeWorkflowMode?: boolean;
     /** Custom renderer for the mentions dropdown. When provided, replaces the default MentionsDropdown entirely. */
     renderMentionsDropdown?: (props: MentionsDropdownRenderProps) => React.ReactNode;
+    /** Optional low-level interaction diagnostics emitted before onSendMessage. */
+    onInteractionDiagnostic?: (event: AgentInputInteractionEvent) => void;
 }
 
 export interface AgentStatusBarRef {
@@ -56,6 +58,8 @@ export interface AgentStatusBarRef {
     getCursorOffset: () => number;
     toggleSpeechRecognition: () => void;
     cancelSpeech: () => void;
+    /** Submit the current value, or an explicitly provided value, through the central interaction guard. */
+    submit: (message?: string) => boolean;
 }
 
 const WORKFLOW_PREFIX_RE = /^(?:w|wo|workflow):(.*)/i;
@@ -79,7 +83,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     onStartCommand,
     inputMinHeight = '6rem',
     activeWorkflowMode,
-    renderMentionsDropdown
+    renderMentionsDropdown,
+    onInteractionDiagnostic
 }, ref) => {
     // Context from provider
     const ctx = useAgentInput();
@@ -123,6 +128,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const domElementsRef = useRef<Map<string, DOMElementData | string>>(new Map());
     const pendingTranscriptRef = useRef<string>('');
+    const submissionLockRef = useRef(false);
+    const previousStatusStateRef = useRef(status.state);
 
     // Real-time data from provider
     const tabs = ctx.tabs?.items ?? [];
@@ -205,11 +212,34 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const triggerFilePicker = ctx.files?.triggerPicker ?? (() => {});
 
     // Handle submit
-    const handleSubmit = useCallback((manualMessage?: string) => {
-        if (!onSendMessage) return;
+    const reportInteraction = useCallback((event: AgentInputInteractionEvent) => {
+        onInteractionDiagnostic?.(event);
+    }, [onInteractionDiagnostic]);
+
+    // All submission paths converge here so status and duplicate guards cannot drift.
+    const handleSubmit = useCallback((manualMessage?: string, source: AgentInputInteractionSource = 'imperative'): boolean => {
+        if (status.state === 'working') {
+            reportInteraction({ type: 'submit-rejected', source, status: status.state, reason: 'working' });
+            return false;
+        }
+
+        if (submissionLockRef.current) {
+            reportInteraction({ type: 'submit-rejected', source, status: status.state, reason: 'duplicate' });
+            return false;
+        }
+
+        if (!onSendMessage) {
+            reportInteraction({ type: 'submit-rejected', source, status: status.state, reason: 'unavailable' });
+            return false;
+        }
 
         let processedMessage = manualMessage?.trim?.() || richInputRef.current?.getValue().trim() || message.trim();
-        if (!processedMessage || processedMessage === '__CANCEL_CONVERSATION__') return;
+        if (!processedMessage || processedMessage === '__CANCEL_CONVERSATION__') {
+            reportInteraction({ type: 'submit-rejected', source, status: status.state, reason: 'empty' });
+            return false;
+        }
+
+        submissionLockRef.current = true;
 
         const references = extractReferences(processedMessage, {
             domElements: domElementsRef.current,
@@ -217,12 +247,24 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
         });
 
         saveToHistory(processedMessage);
-        onSendMessage(processedMessage, references);
+        reportInteraction({
+            type: 'submit-accepted',
+            source,
+            status: status.state,
+            messageLength: processedMessage.length,
+        });
+        try {
+            onSendMessage(processedMessage, references);
+        } catch (error) {
+            submissionLockRef.current = false;
+            throw error;
+        }
 
         setMessage('');
         resetInputHistory(); // Reset arrow key history navigation on submit
         domElementsRef.current.clear();
-    }, [message, onSendMessage, availableWorkflows, saveToHistory, resetInputHistory]);
+        return true;
+    }, [status.state, reportInteraction, onSendMessage, message, extractReferences, availableWorkflows, saveToHistory, resetInputHistory]);
 
     const handleSubmitRef = useRef(handleSubmit);
     handleSubmitRef.current = handleSubmit;
@@ -231,7 +273,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     const handleSpeechAutoSubmit = useCallback(() => {
         const finalMessage = message + pendingTranscriptRef.current;
         if (finalMessage.trim()) {
-            handleSubmitRef.current(finalMessage);
+            handleSubmitRef.current(finalMessage, 'speech');
             pendingTranscriptRef.current = '';
         }
     }, [message]);
@@ -260,12 +302,25 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
         focus: (cursorOffset?: number) => richInputRef.current?.focus(cursorOffset),
-        setValue: (value: string) => setMessage(value),
+        setValue: (value: string) => {
+            if (status.state !== 'working' && value.trim()) submissionLockRef.current = false;
+            setMessage(value);
+        },
         getValue: () => richInputRef.current?.getValue() ?? message,
         getCursorOffset: () => richInputRef.current?.getCursorOffset() ?? -1,
         toggleSpeechRecognition: () => speechRecognition.toggleListening(),
-        cancelSpeech: () => speechSynthesis.cancel()
+        cancelSpeech: () => speechSynthesis.cancel(),
+        submit: (manualMessage?: string) => handleSubmitRef.current(manualMessage, 'imperative')
     }));
+
+    // Keep the lock through an active run. Release it when that run ends; hosts
+    // that do not expose a working state can release it by editing a new prompt.
+    useEffect(() => {
+        const previousState = previousStatusStateRef.current;
+        if (status.state === 'working') submissionLockRef.current = true;
+        else if (previousState === 'working') submissionLockRef.current = false;
+        previousStatusStateRef.current = status.state;
+    }, [status.state]);
 
     // Listen for Alt+Click elements
     useEffect(() => {
@@ -322,7 +377,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
             pendingTranscriptRef.current = speechRecognition.transcript;
             const newMessage = message + speechRecognition.transcript;
             speechRecognition.clearTranscript();
-            setTimeout(() => handleSubmitRef.current(newMessage), 200);
+            setTimeout(() => handleSubmitRef.current(newMessage, 'speech'), 200);
         }
     }, [speechRecognition.transcript, message, speechRecognition.clearTranscript]);
 
@@ -415,7 +470,7 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
 
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSubmitRef.current();
+            handleSubmitRef.current(undefined, 'keyboard');
         } else if (e.key === 'Escape') {
             if (showAddDropdown) {
                 e.preventDefault();
@@ -427,9 +482,10 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
     // Handle input — just sync message state
     // (@ detection is handled by TipTap's suggestion plugin)
     const handleInput = useCallback((value: string, cursorOffset: number) => {
+        if (status.state !== 'working' && value.trim()) submissionLockRef.current = false;
         setMessage(value);
         resetInputHistory();
-    }, [resetInputHistory]);
+    }, [status.state, resetInputHistory]);
 
     const handleFocus = () => {
         setIsInputFocused(true);
@@ -608,7 +664,8 @@ const AgentStatusBar = forwardRef<AgentStatusBarRef, AgentStatusBarProps>(({
                                                     status={status}
                                                     message={message}
                                                     onCancel={onCancel}
-                                                    onSubmit={() => handleSubmitRef.current()}
+                                                    onSubmit={() => handleSubmitRef.current(undefined, 'pointer')}
+                                                    onInteractionDiagnostic={reportInteraction}
                                                 />
                                             </div>
                                         </div>

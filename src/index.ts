@@ -4,7 +4,7 @@ export type { AgentInputConfig, ResolvedAgentInputConfig } from './context/Agent
 
 // Main component
 export { default as AgentStatusBar } from './components/AgentStatusBar';
-export type { AgentStatusBarRef } from './components/AgentStatusBar';
+export type { AgentStatusBarProps, AgentStatusBarRef } from './components/AgentStatusBar';
 
 // Sub-components (tree-shakeable)
 export { default as RichInput } from './components/RichInputTipTap';
@@ -30,6 +30,9 @@ export { useInputHistory } from './hooks/useInputHistory';
 export type {
   AgentStatus,
   AgentState,
+  AgentInputInteractionEvent,
+  AgentInputInteractionSource,
+  AgentInputSubmitRejectionReason,
   DOMElementData,
   DOMElementSelectors,
   DOMElementHierarchy,

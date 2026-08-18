@@ -26,6 +26,30 @@ export interface AgentStatus {
   toolDuration?: number;
 }
 
+export type AgentInputInteractionSource = 'pointer' | 'keyboard' | 'speech' | 'imperative';
+
+export type AgentInputSubmitRejectionReason = 'empty' | 'working' | 'duplicate' | 'unavailable';
+
+/** Diagnostic events emitted at the input interaction boundary, before host submission. */
+export type AgentInputInteractionEvent =
+  | {
+      type: 'pointerdown' | 'click';
+      action: 'submit' | 'cancel';
+      status: AgentState;
+    }
+  | {
+      type: 'submit-accepted';
+      source: AgentInputInteractionSource;
+      status: AgentState;
+      messageLength: number;
+    }
+  | {
+      type: 'submit-rejected';
+      source: AgentInputInteractionSource;
+      status: AgentState;
+      reason: AgentInputSubmitRejectionReason;
+    };
+
 // ─── Reference Types ─────────────────────────────────────────────────
 
 export interface DOMElementSelectors {

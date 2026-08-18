@@ -50,11 +50,16 @@ function App() {
         onSendMessage={(message, references) => {
           console.log('Send:', message, references);
         }}
+        onInteractionDiagnostic={(event) => {
+          console.debug('Agent input interaction:', event);
+        }}
       />
     </AgentInputProvider>
   );
 }
 ```
+
+`onInteractionDiagnostic` is optional. It reports pointer activation plus accepted or rejected submit attempts (including `empty`, `working`, `duplicate`, and `unavailable`) before `onSendMessage` runs. Imperative consumers can call `AgentStatusBarRef.submit(message?)`; it uses the same central guard as pointer, keyboard, and speech submission.
 
 ## Theming
 
@@ -72,6 +77,8 @@ To customize colors, override the CSS custom properties:
 :root {
   --ai-status-working: #3870FF;
   --ai-surface-primary: #ffffff;
+  --ai-button-success-bg: #15803d;
+  --ai-button-danger-bg: #dc2626;
   /* see dist/styles.css for all available tokens */
 }
 ```

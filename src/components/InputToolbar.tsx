@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Mic, Send, Square, Plus, ChevronDown, AudioLines } from '../icons';
 import ChatModeSwitcher from './ChatModeSwitcher';
 import type { DisplayMode } from '../types';
 import AddButtonDropdown from './AddButtonDropdown';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
-import type { MentionSection, AgentStatus } from '../types';
+import type { MentionSection, AgentStatus, AgentInputInteractionEvent } from '../types';
 
 export interface InputToolbarProps {
     // Chat/Log mode switcher props
@@ -34,9 +34,11 @@ export interface InputToolbarProps {
     message: string;
     onCancel?: () => void;
     onSubmit: () => void;
+    onInteractionDiagnostic?: (event: AgentInputInteractionEvent) => void;
 }
 
 const TOOLBAR_BTN = "rounded-[0.5rem] w-[2rem] h-[2rem] flex items-center justify-center cursor-pointer transition-colors";
+const SEND_CONTROL_BTN = "ai-send-control rounded-[0.625rem] w-[2.75rem] h-[2.75rem] shrink-0 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none disabled:cursor-not-allowed";
 
 const InputToolbar: React.FC<InputToolbarProps> = ({
     displayMode,
@@ -56,12 +58,69 @@ const InputToolbar: React.FC<InputToolbarProps> = ({
     status,
     message,
     onCancel,
-    onSubmit
+    onSubmit,
+    onInteractionDiagnostic
 }) => {
     const isWorking = status.state === "working";
     const hasMessage = message.trim().length > 0;
-    const canSubmit = isWorking ? (status.canCancel && onCancel) : hasMessage;
+    const canCancel = Boolean(status.canCancel && onCancel);
+    const isActionDisabled = isWorking ? !canCancel : !hasMessage;
     const modelLabel = selectedModelName || selectedModel || 'Select model';
+    const pointerActivationRef = useRef<{
+        pointerId: number;
+        rect: { left: number; right: number; top: number; bottom: number };
+    } | null>(null);
+    const ignoreNextClickRef = useRef(false);
+
+    const reportPointerInteraction = (type: 'pointerdown' | 'click') => {
+        onInteractionDiagnostic?.({
+            type,
+            action: isWorking ? 'cancel' : 'submit',
+            status: status.state,
+        });
+    };
+
+    const invokeAction = () => {
+        if (isWorking) onCancel?.();
+        else onSubmit();
+    };
+
+    const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        pointerActivationRef.current = {
+            pointerId: event.pointerId,
+            rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
+        };
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        reportPointerInteraction('pointerdown');
+    };
+
+    const handlePointerUp = (event: React.PointerEvent<HTMLButtonElement>) => {
+        const activation = pointerActivationRef.current;
+        pointerActivationRef.current = null;
+        if (!activation || activation.pointerId !== event.pointerId) return;
+
+        const { left, right, top, bottom } = activation.rect;
+        const releasedInsideTarget = event.clientX >= left && event.clientX <= right
+            && event.clientY >= top && event.clientY <= bottom;
+        if (releasedInsideTarget) {
+            // Treat a completed pointer gesture as the click. Pointer capture
+            // keeps this reliable if TipTap blur causes the toolbar to shift.
+            ignoreNextClickRef.current = true;
+            setTimeout(() => { ignoreNextClickRef.current = false; }, 0);
+            reportPointerInteraction('click');
+            invokeAction();
+        }
+    };
+
+    const handleActionClick = () => {
+        if (ignoreNextClickRef.current) {
+            ignoreNextClickRef.current = false;
+            return;
+        }
+        reportPointerInteraction('click');
+        invokeAction();
+    };
 
     return (
         <div className="flex items-center justify-between">
@@ -142,25 +201,26 @@ const InputToolbar: React.FC<InputToolbarProps> = ({
 
                 {(hasMessage || isWorking) && (
                     <button
-                        className={`${TOOLBAR_BTN} disabled:cursor-not-allowed`}
-                        style={{
-                            backgroundColor: isWorking ? 'var(--ai-surface-active)' : 'var(--ai-button-primary-bg)',
-                        }}
-                        onClick={isWorking ? onCancel : onSubmit}
-                        disabled={!canSubmit && !isWorking}
+                        className={SEND_CONTROL_BTN}
+                        data-action={isWorking ? 'cancel' : 'send'}
+                        onPointerDown={handlePointerDown}
+                        onPointerUp={handlePointerUp}
+                        onPointerCancel={() => { pointerActivationRef.current = null; }}
+                        onClick={handleActionClick}
+                        disabled={isActionDisabled}
                         aria-label={isWorking ? "Cancel" : "Send message"}
                         title={isWorking ? "Cancel" : "Send message (Enter)"}
                     >
                         {isWorking ? (
                             <Square
                                 className="w-[0.875rem] h-[0.875rem]"
-                                style={{ fill: 'var(--ai-text-primary)', stroke: 'var(--ai-text-primary)' }}
+                                style={{ fill: 'currentColor', stroke: 'currentColor' }}
                                 strokeWidth={0}
                             />
                         ) : (
                             <Send
                                 className="w-[1rem] h-[1rem]"
-                                style={{ fill: 'var(--ai-text-on-dark)', stroke: 'var(--ai-text-on-dark)' }}
+                                style={{ fill: 'currentColor', stroke: 'currentColor' }}
                                 strokeWidth={1.5}
                             />
                         )}

@@ -8,5 +8,8 @@ export const SEL = {
   modelButton: '[aria-label="Select a model"]',
   modelDropdown: '[role="listbox"][aria-label="Select model"]',
   sendButton: '[aria-label="Send message"]',
+  cancelButton: '[aria-label="Cancel"]',
+  sendCount: '[aria-label="Send count"]',
+  lastInteraction: '[aria-label="Last interaction"]',
   stateRadio: (name: string) => `[role="radio"][aria-checked]`,
 } as const;

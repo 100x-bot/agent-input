@@ -40,6 +40,11 @@ const presetStates: Record<string, AgentStatus> = {
     },
     duration: 3200,
   },
+  workingLocked: {
+    state: 'working',
+    operation: 'Finishing a non-interruptible step',
+    canCancel: false,
+  },
   error: {
     state: 'error',
     error: 'Rate limit exceeded. Please try again in a few seconds.',
@@ -382,6 +387,8 @@ export default function App() {
   const [showModelDialog, setShowModelDialog] = useState(false);
   const [workflowItems, setWorkflowItems] = useState(mockWorkflows);
   const [isSearchingWorkflows, setIsSearchingWorkflows] = useState(false);
+  const [sendCount, setSendCount] = useState(0);
+  const [lastInteraction, setLastInteraction] = useState('');
   const workflowSearchRequestRef = useRef(0);
 
   const fetchMockWorkflows = useCallback(async (params?: { query?: string }) => {
@@ -518,7 +525,11 @@ export default function App() {
                     : { backgroundColor: 'var(--ai-surface-primary)', color: 'var(--ai-text-secondary)', border: '1px solid var(--ai-border-default)' }
                   }
                 >
-                  {key === 'workingSubtask' ? 'Working (subtask)' : key.charAt(0).toUpperCase() + key.slice(1)}
+                  {key === 'workingSubtask'
+                    ? 'Working (subtask)'
+                    : key === 'workingLocked'
+                      ? 'Working (locked)'
+                      : key.charAt(0).toUpperCase() + key.slice(1)}
                 </button>
               );
             })}
@@ -542,14 +553,18 @@ export default function App() {
                   setActivePreset('idle');
                 }}
                 onSendMessage={(message, refs) => {
+                  setSendCount(count => count + 1);
                   setActivePreset('working');
                   setTimeout(() => setActivePreset('idle'), 3000);
                 }}
+                onInteractionDiagnostic={(event) => setLastInteraction(JSON.stringify(event))}
                 hasMessages={true}
                 showInput={true}
                 placeholder="Ask the agent anything..."
                 availableWorkflows={['Summarize Page', 'Generate Tests', 'Translate Content']}
               />
+              <output className="sr-only" aria-label="Send count" data-send-count={sendCount}>{sendCount}</output>
+              <output className="sr-only" aria-label="Last interaction">{lastInteraction}</output>
             </AgentInputProvider>
           </div>
         </section>
