@@ -4,8 +4,14 @@ import React from 'react';
 
 export const mockModels = [
   { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic' },
+  { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', provider: 'anthropic' },
   { id: 'gpt-5', name: 'GPT-5', provider: 'openai' },
+  { id: 'gpt-5-mini', name: 'GPT-5 Mini', provider: 'openai' },
   { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'google' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'google' },
+  { id: 'command-r-plus', name: 'Command R+', provider: 'cohere' },
+  { id: 'mistral-large', name: 'Mistral Large', provider: 'mistral' },
+  { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'deepseek' },
 ];
 
 const mockTabs: TabData[] = [

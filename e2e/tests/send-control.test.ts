@@ -29,7 +29,7 @@ describe('Send/Cancel control', () => {
     await page.close();
   });
 
-  it('uses the success state and a minimum 44px target for a valid idle prompt', async () => {
+  it('uses the compact success-state design for a valid idle prompt', async () => {
     await typeInInput(page, 'Run this once');
     const metrics = await page.$eval(SEL.sendButton, (button) => {
       const rect = button.getBoundingClientRect();
@@ -41,8 +41,8 @@ describe('Send/Cancel control', () => {
       };
     });
 
-    expect(metrics.width).toBeGreaterThanOrEqual(44);
-    expect(metrics.height).toBeGreaterThanOrEqual(44);
+    expect(metrics.width).toBe(32);
+    expect(metrics.height).toBe(32);
     expect(metrics.action).toBe('send');
     expect(metrics.background).toBe('rgb(21, 128, 61)');
   });
@@ -93,8 +93,8 @@ describe('Send/Cancel control', () => {
       return resolved;
     }, dangerToken);
     expect(state.background).toBe(tokenColor);
-    expect(state.width).toBeGreaterThanOrEqual(44);
-    expect(state.height).toBeGreaterThanOrEqual(44);
+    expect(state.width).toBe(32);
+    expect(state.height).toBe(32);
   });
 
   it('disables cancellation when the active step cannot be cancelled', async () => {

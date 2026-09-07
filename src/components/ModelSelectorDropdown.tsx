@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Check, Sparkles, Box, Brain } from "../icons";
 import { useAgentInput } from "../context/AgentInputProvider";
 import type { LLMModel, ModelSelectionConfig } from "../types";
@@ -10,6 +10,24 @@ interface ModelSelectorProps {
   onModelSelect?: (modelId: string) => void;
 }
 
+const isSubsequence = (query: string, value: string) => {
+  let queryIndex = 0;
+
+  for (const character of value) {
+    if (character === query[queryIndex]) {
+      queryIndex += 1;
+    }
+    if (queryIndex === query.length) return true;
+  }
+
+  return false;
+};
+
+const matchesQuery = (query: string, value: string) => {
+  const normalizedValue = value.toLocaleLowerCase();
+  return normalizedValue.includes(query) || isSubsequence(query, normalizedValue);
+};
+
 const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
   isOpen,
   onClose,
@@ -19,17 +37,30 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
   const [models, setModels] = useState<LLMModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const listboxId = useId();
+  const optionIdPrefix = useId();
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const filteredModels = useMemo(() => {
+    if (!normalizedQuery) return models;
+
+    return models.filter((model) =>
+      [model.name, model.id, model.provider].some((value) =>
+        matchesQuery(normalizedQuery, value)
+      )
+    );
+  }, [models, normalizedQuery]);
 
   const {
     selectedIndex,
     handleKeyDown,
     setSelectedIndex
   } = useDropdownNavigation({
-    itemsLength: models.length,
+    itemsLength: filteredModels.length,
     onSelect: (index) => {
-      if (models[index]) {
-        handleModelChange(models[index].id);
+      if (filteredModels[index]) {
+        handleModelChange(filteredModels[index].id);
       }
     },
     onClose,
@@ -46,24 +77,25 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
     loadSelectedModel();
   }, []);
 
-  // Set initial selected index based on selectedModel when opened or models loaded
+  // Keep keyboard navigation aligned with the visible result set.
   useEffect(() => {
-    if (isOpen && models.length > 0 && selectedModel) {
-      const index = models.findIndex(m => m.id === selectedModel);
-      if (index >= 0) {
-        setSelectedIndex(index);
-      } else {
-        setSelectedIndex(0);
-      }
-    } else if (isOpen) {
-      setSelectedIndex(0);
-    }
-  }, [isOpen, models, selectedModel, setSelectedIndex]);
+    if (!isOpen) return;
 
-  // Focus container on open
+    if (filteredModels.length === 0) {
+      setSelectedIndex(-1);
+      return;
+    }
+
+    const selectedModelIndex = filteredModels.findIndex((model) => model.id === selectedModel);
+    setSelectedIndex(selectedModelIndex >= 0 ? selectedModelIndex : 0);
+  }, [isOpen, filteredModels, selectedModel, setSelectedIndex]);
+
+  // Each open starts a fresh search session with typing focus ready.
   useEffect(() => {
-    if (isOpen && containerRef.current) {
-      containerRef.current.focus();
+    if (isOpen) {
+      searchInputRef.current?.focus();
+    } else {
+      setQuery("");
     }
   }, [isOpen]);
 
@@ -190,11 +222,7 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
         style={{ zIndex: 'var(--ai-layer-exclusive-popover, 70)' }}
       >
         <div
-          ref={containerRef}
-          tabIndex={-1}
           onKeyDown={handleKeyDown}
-          role="listbox"
-          aria-label="Select model"
           className="rounded-[0.75rem] p-[0.75rem] flex flex-col gap-[0.25rem] overflow-hidden outline-none"
           style={{
             backgroundColor: 'var(--ai-surface-primary)',
@@ -202,8 +230,29 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
             boxShadow: 'var(--ai-shadow-sm)',
           }}
         >
+          <input
+            ref={searchInputRef}
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search models..."
+            aria-label="Search models"
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={selectedIndex >= 0 ? `${optionIdPrefix}-option-${selectedIndex}` : undefined}
+            className="w-full h-[2rem] rounded-[0.5rem] px-[0.625rem] mb-[0.5rem] text-[0.8125rem] outline-none"
+            style={{
+              backgroundColor: 'var(--ai-surface-secondary)',
+              border: '1px solid var(--ai-border-default)',
+              color: 'var(--ai-text-primary)',
+            }}
+          />
+
           {/* List container */}
           <div
+            id={listboxId}
+            role="listbox"
+            aria-label="Select model"
             className="overflow-y-auto max-h-[300px]"
             style={{ scrollbarWidth: "none" }}
           >
@@ -223,15 +272,22 @@ const ModelSelectorDropdown: React.FC<ModelSelectorProps> = ({
                   No models available
                 </p>
               </div>
+            ) : filteredModels.length === 0 ? (
+              <div className="text-center py-4" role="status">
+                <p className="text-[0.875rem]" style={{ color: 'var(--ai-text-muted)' }}>
+                  No models match “{query.trim()}”
+                </p>
+              </div>
             ) : (
               <div className="flex flex-col gap-[0.25rem]">
-                {models.map((model, index) => {
+                {filteredModels.map((model, index) => {
                   const isSelected = model.id === selectedModel;
                   const isFocused = selectedIndex === index;
 
                   return (
                     <button
                       key={model.id}
+                      id={`${optionIdPrefix}-option-${index}`}
                       role="option"
                       aria-selected={isSelected}
                       ref={isFocused ? (el) => {

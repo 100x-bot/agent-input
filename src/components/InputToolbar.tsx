@@ -38,7 +38,7 @@ export interface InputToolbarProps {
 }
 
 const TOOLBAR_BTN = "rounded-[0.5rem] w-[2rem] h-[2rem] flex items-center justify-center cursor-pointer transition-colors";
-const SEND_CONTROL_BTN = "ai-send-control rounded-[0.625rem] w-[2.75rem] h-[2.75rem] shrink-0 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none disabled:cursor-not-allowed";
+const SEND_CONTROL_BTN = "ai-send-control rounded-[0.5rem] w-[2rem] h-[2rem] shrink-0 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none disabled:cursor-not-allowed";
 
 const InputToolbar: React.FC<InputToolbarProps> = ({
     displayMode,
@@ -137,10 +137,12 @@ const InputToolbar: React.FC<InputToolbarProps> = ({
                 {/* Model selection button */}
                 <div className="relative group">
                     <button
-                        className="rounded-[0.5rem] h-[2rem] min-w-[2rem] max-w-[11rem] px-[0.5rem] flex items-center gap-[0.25rem] cursor-pointer transition-colors"
+                        className="rounded-[0.5rem] h-[2rem] min-w-[6.5rem] max-w-[11rem] shrink-0 px-[0.5rem] flex items-center gap-[0.25rem] cursor-pointer transition-colors"
                         style={{ border: '1px solid var(--ai-border-default)', backgroundColor: 'var(--ai-surface-primary)', color: 'var(--ai-text-secondary)' }}
                         onClick={() => onModelDialogToggle(true)}
-                        aria-label="Select a model"
+                        aria-label={`Change model, ${modelLabel}`}
+                        aria-haspopup="listbox"
+                        aria-expanded={showModelDialog}
                         title={modelLabel}
                     >
                         <span className="min-w-0 truncate text-[0.75rem] font-[500]">{modelLabel}</span>
@@ -157,7 +159,7 @@ const InputToolbar: React.FC<InputToolbarProps> = ({
                     {!showModelDialog && (
                         <div className="absolute left-1/2 -translate-x-1/2 mt-[0.25rem] z-50 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200">
                             <div className="text-[0.75rem] rounded-[0.25rem] px-[0.75rem] py-[0.25rem] whitespace-nowrap font-[500]" style={{ backgroundColor: 'var(--ai-surface-tooltip)', color: 'var(--ai-text-on-dark)' }}>
-                                Select a model
+                                Change model: {modelLabel}
                             </div>
                         </div>
                     )}

@@ -21,10 +21,18 @@ export const useDropdownNavigation = ({
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
+                if (itemsLength === 0) {
+                    setSelectedIndex(-1);
+                    break;
+                }
                 setSelectedIndex(prev => (prev >= itemsLength - 1 ? 0 : prev + 1));
                 break;
             case 'ArrowUp':
                 e.preventDefault();
+                if (itemsLength === 0) {
+                    setSelectedIndex(-1);
+                    break;
+                }
                 setSelectedIndex(prev => (prev <= 0 ? itemsLength - 1 : prev - 1));
                 break;
             case 'Enter':

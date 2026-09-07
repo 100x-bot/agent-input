@@ -123,6 +123,21 @@ const testCategories: TestCategory[] = [
     ],
   },
   {
+    id: 'model-selector',
+    title: 'Model Selector',
+    file: 'model-selector.test.ts',
+    count: 5,
+    description: 'Search models by name, ID, or provider and keep the active model visible at compact widths.',
+    tryIt: 'Click the current model name, then search for “cohere”, “gemini”, or a model ID. Use Arrow keys and Enter to select.',
+    scenarios: [
+      { name: 'Search receives focus', description: 'Opening the selector is immediately ready for typing' },
+      { name: 'Search all model fields', description: 'Name, ID, and provider matches filter case-insensitively' },
+      { name: 'Keyboard selection', description: 'Arrow keys and Enter navigate only the filtered results' },
+      { name: 'Empty and reset states', description: 'No-match feedback is useful and each open starts with a blank query' },
+      { name: 'Responsive active label', description: 'The current model remains recognizable in full and side-panel layouts' },
+    ],
+  },
+  {
     id: 'chip-deletion',
     title: 'Chip Deletion',
     file: 'chip-deletion.test.ts',
@@ -389,6 +404,7 @@ export default function App() {
   const [isSearchingWorkflows, setIsSearchingWorkflows] = useState(false);
   const [sendCount, setSendCount] = useState(0);
   const [lastInteraction, setLastInteraction] = useState('');
+  const [demoWidth, setDemoWidth] = useState<'full' | 'side-panel'>('full');
   const workflowSearchRequestRef = useRef(0);
 
   const fetchMockWorkflows = useCallback(async (params?: { query?: string }) => {
@@ -538,11 +554,41 @@ export default function App() {
 
         {/* Live demo */}
         <section id="demo" aria-labelledby="demo-heading">
-          <h2 id="demo-heading" className="text-lg font-semibold mb-3" style={{ color: 'var(--ai-text-primary)' }}>Live Demo</h2>
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <h2 id="demo-heading" className="text-lg font-semibold" style={{ color: 'var(--ai-text-primary)' }}>Live Demo</h2>
+            <div className="inline-flex rounded-lg p-1" role="group" aria-label="Demo width" style={{ backgroundColor: 'var(--ai-surface-active)' }}>
+              {([
+                ['full', 'Full width'],
+                ['side-panel', 'Side panel'],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setDemoWidth(value)}
+                  aria-pressed={demoWidth === value}
+                  className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                  style={demoWidth === value
+                    ? { backgroundColor: 'var(--ai-surface-primary)', color: 'var(--ai-text-primary)', boxShadow: 'var(--ai-shadow-sm)' }
+                    : { color: 'var(--ai-text-muted)' }
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <p className="text-sm mb-4" style={{ color: 'var(--ai-text-muted)' }}>
-            Type in the input below. Use <code className="px-1 rounded text-xs" style={{ backgroundColor: 'var(--ai-surface-active)', color: 'var(--ai-text-primary)' }}>@</code> to trigger mention suggestions, <code className="px-1 rounded text-xs" style={{ backgroundColor: 'var(--ai-surface-active)', color: 'var(--ai-text-primary)' }}>+</code> button to add references, or <code className="px-1 rounded text-xs" style={{ backgroundColor: 'var(--ai-surface-active)', color: 'var(--ai-text-primary)' }}>Shift+Enter</code> for multiline.
+            Click the model name to search the expanded model list. Use the width control to verify that its label remains visible in a side-panel layout.
           </p>
-          <div className="rounded-xl" style={{ backgroundColor: 'var(--ai-surface-primary)', border: '1px solid var(--ai-border-subtle)', boxShadow: 'var(--ai-shadow-md)' }}>
+          <div
+            className="rounded-xl mx-auto transition-[max-width] duration-200"
+            style={{
+              maxWidth: demoWidth === 'side-panel' ? '400px' : '100%',
+              backgroundColor: 'var(--ai-surface-primary)',
+              border: '1px solid var(--ai-border-subtle)',
+              boxShadow: 'var(--ai-shadow-md)',
+            }}
+          >
             <AgentInputProvider config={mockConfig}>
               <AgentStatusBar
                 ref={statusBarRef}
